@@ -1,8 +1,20 @@
 const markdownExtensions = new Set(["md", "mdx", "markdown", "mdown", "mkdn", "mkd"]);
 
 export function isMarkdownFile(fileName: string): boolean {
-  const ext = fileName.split(".").pop()?.toLowerCase() ?? "";
+  const lower = fileName.toLowerCase();
+  if (lower.endsWith(".cue.md") || lower.endsWith(".cuemd")) return true;
+  const ext = lower.split(".").pop() ?? "";
   return markdownExtensions.has(ext);
+}
+
+export type CueFileType = "cue.md" | "cuemd" | "markdown" | "other";
+
+export function detectCueFileType(fileName: string): CueFileType {
+  const lower = fileName.toLowerCase();
+  if (lower.endsWith(".cue.md")) return "cue.md";
+  if (lower.endsWith(".cuemd")) return "cuemd";
+  if (isMarkdownFile(fileName)) return "markdown";
+  return "other";
 }
 
 // Map file extension to Shiki language identifier.

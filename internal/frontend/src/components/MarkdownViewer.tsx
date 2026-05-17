@@ -20,7 +20,9 @@ import { CloseFileButton } from "./CloseFileButton";
 import { resolveLink, resolveImageSrc, extractLanguage } from "../utils/resolve";
 import { parseFrontmatter } from "../utils/frontmatter";
 import { stripMdxSyntax } from "../utils/mdx";
-import { isMarkdownFile, detectLanguage } from "../utils/filetype";
+import { isMarkdownFile, detectLanguage, detectCueFileType } from "../utils/filetype";
+import { CueDocumentRenderer } from "../cue/CueDocumentRenderer";
+import "../cue/styles.css";
 import type { ZoomContent } from "./ZoomModal";
 import type { TocHeading } from "./TocPanel";
 import type { Components } from "react-markdown";
@@ -88,6 +90,61 @@ interface SearchHitMarker {
 }
 
 const SEARCH_HIT_COLUMN_OFFSET = -24;
+const TRANSIENT_TARGET_CLASS = "mo-target";
+
+function getHashTarget(href: string | undefined): HTMLElement | null {
+  if (!href?.startsWith("#")) {
+    return null;
+  }
+  const rawId = href.slice(1);
+  if (!rawId) {
+    return null;
+  }
+  const ids = [rawId];
+  try {
+    const decoded = decodeURIComponent(rawId);
+    if (decoded !== rawId) {
+      ids.push(decoded);
+    }
+  } catch {
+    // Keep the raw id when the fragment is not valid URI-encoded text.
+  }
+  for (const id of ids) {
+    const target = document.getElementById(id);
+    if (target) {
+      return target;
+    }
+  }
+  return null;
+}
+
+function clearTransientTargets() {
+  document
+    .querySelectorAll(`.${TRANSIENT_TARGET_CLASS}`)
+    .forEach((el) => el.classList.remove(TRANSIENT_TARGET_CLASS));
+
+  // github-markdown-css highlights footnotes with `li:target`. If a previous
+  // native hash navigation created that state, remove only footnote hashes when
+  // the user clicks elsewhere.
+  if (window.location.hash && document.querySelector(".markdown-body .footnotes li:target")) {
+    window.history.replaceState(window.history.state, "", window.location.pathname + window.location.search);
+  }
+}
+
+function scrollToAndHighlightHashTarget(href: string | undefined): boolean {
+  const target = getHashTarget(href);
+  if (!target) {
+    return false;
+  }
+  const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  target.scrollIntoView({
+    behavior: reduced ? "auto" : "smooth",
+    block: "start",
+  });
+  clearTransientTargets();
+  target.classList.add(TRANSIENT_TARGET_CLASS);
+  return true;
+}
 
 function collectSearchHitMarkers(root: HTMLElement, query: string): SearchHitMarker[] {
   const trimmed = query.trim();
@@ -587,6 +644,40 @@ export function MarkdownViewer({
     [activeGroup, fileId, onFileOpened],
   );
 
+  const handleArticleClickCapture = useCallback((e: React.MouseEvent<HTMLElement>) => {
+    if (!isPlainLeftClick(e)) {
+      return;
+    }
+    const target = e.target;
+    if (!(target instanceof Element)) {
+      clearTransientTargets();
+      return;
+    }
+    const anchor = target.closest<HTMLAnchorElement>('a[href^="#"]');
+    if (!anchor) {
+      clearTransientTargets();
+      return;
+    }
+    if (scrollToAndHighlightHashTarget(anchor.getAttribute("href") ?? undefined)) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+  }, []);
+
+  useEffect(() => {
+    const clearOnOutsideClick = (e: MouseEvent) => {
+      const target = e.target;
+      if (target instanceof Element && target.closest('a[href^="#"]')) {
+        return;
+      }
+      clearTransientTargets();
+    };
+    document.addEventListener("click", clearOnOutsideClick, true);
+    return () => {
+      document.removeEventListener("click", clearOnOutsideClick, true);
+    };
+  }, []);
+
   const components: Components = useMemo(
     () => ({
       pre: ({ children }) => <>{children}</>,
@@ -625,6 +716,8 @@ export function MarkdownViewer({
         }
         return <img src={resolveImageSrc(src, activeGroup, fileId)} alt={alt} {...props} />;
       },
+      div: ({ node: _node, ...props }) => <div {...props} />,
+      span: ({ node: _node, ...props }) => <span {...props} />,
       a: ({ href, children, ...props }) => {
         const resolved = resolveLink(href, activeGroup, fileId);
         switch (resolved.type) {
@@ -640,17 +733,8 @@ export function MarkdownViewer({
                 href={href}
                 onClick={(e) => {
                   if (!isPlainLeftClick(e)) return;
-                  const id = href?.slice(1);
-                  if (!id) return;
-                  const target = document.getElementById(id);
-                  if (target) {
+                  if (scrollToAndHighlightHashTarget(href)) {
                     e.preventDefault();
-                    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-                    target.scrollIntoView({
-                      behavior: reduced ? "auto" : "smooth",
-                      block: "start",
-                    });
-                    history.pushState(null, "", href);
                   }
                 }}
                 {...props}
@@ -684,6 +768,7 @@ export function MarkdownViewer({
 
   const isMarkdown = isMarkdownFile(fileName);
   const codeLanguage = isMarkdown ? null : detectLanguage(fileName);
+  const cueFileType = detectCueFileType(fileName ?? "");
 
   const parsed = useMemo(
     () => (isMarkdown && !isRawView ? parseFrontmatter(content) : null),
@@ -698,6 +783,17 @@ export function MarkdownViewer({
       return <RawView content={content} />;
     }
     const base = parsed ? parsed.content : content;
+
+    // Cue Markdown files (.cue.md and .cuemd) go through the tree-based renderer
+    if (cueFileType === "cue") {
+      return (
+        <>
+          {parsed && <FrontmatterBlock yaml={parsed.yaml} />}
+          <CueDocumentRenderer source={base} />
+        </>
+      );
+    }
+
     const md = fileName.toLowerCase().endsWith(".mdx") ? stripMdxSyntax(base) : base;
     return (
       <>
@@ -718,7 +814,7 @@ export function MarkdownViewer({
         </Markdown>
       </>
     );
-  }, [content, isRawView, isMarkdown, codeLanguage, parsed, components, fileName]);
+  }, [content, isRawView, isMarkdown, codeLanguage, parsed, components, fileName, cueFileType]);
 
   const prevHeadingsKey = useRef("");
   useEffect(() => {
@@ -806,6 +902,7 @@ export function MarkdownViewer({
     <div className="flex items-start gap-2">
       <article
         ref={articleRef}
+        onClickCapture={handleArticleClickCapture}
         className={`markdown-body relative min-w-0 flex-1 overflow-visible${isWide ? " markdown-body--wide" : ""}${fontSize !== "medium" ? ` markdown-body--${fontSize}` : ""}`}
       >
         <div className="pointer-events-none absolute inset-0 z-10 overflow-visible">

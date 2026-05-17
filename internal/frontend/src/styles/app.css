@@ -271,3 +271,29 @@ body,
     max-width: 980px !important;
   }
 }
+
+/* Disable github-markdown-css footnote :target highlighting; MarkdownViewer uses
+   a transient class so the highlight can clear on the next unrelated click. */
+.markdown-body .footnotes li:target::before {
+  content: none;
+  border: 0;
+}
+.markdown-body .footnotes li:target {
+  color: inherit;
+}
+
+/* Transient footnote highlight — replaces :target so the highlight clears on next click */
+.markdown-body .footnotes li.mo-target::before {
+  position: absolute;
+  top: calc(var(--base-size-8, 8px) * -1);
+  right: calc(var(--base-size-8, 8px) * -1);
+  bottom: calc(var(--base-size-8, 8px) * -1);
+  left: calc(var(--base-size-24, 24px) * -1);
+  pointer-events: none;
+  content: "";
+  border: 2px solid var(--borderColor-accent-emphasis, #0969da);
+  border-radius: 6px;
+}
+.markdown-body .footnotes li.mo-target {
+  color: var(--fgColor-default);
+}
