@@ -1,17 +1,12 @@
-<p align="center">
-<br><br><br>
-<img src="https://github.com/k1LoW/mo/raw/main/images/logo.svg" width="120" alt="mo">
-<br><br><br>
-</p>
+# cuemo
 
-# mo
+`cuemo` is a **Cue**-enhanced **M**arkdown viewer that **o**pens `.md`, `.cue.md`, and `.cuemd` files in a browser.
 
-[![build](https://github.com/k1LoW/mo/actions/workflows/ci.yml/badge.svg)](https://github.com/k1LoW/mo/actions/workflows/ci.yml) ![Coverage](https://raw.githubusercontent.com/k1LoW/octocovs/main/badges/k1LoW/mo/coverage.svg) ![Code to Test Ratio](https://raw.githubusercontent.com/k1LoW/octocovs/main/badges/k1LoW/mo/ratio.svg) ![Test Execution Time](https://raw.githubusercontent.com/k1LoW/octocovs/main/badges/k1LoW/mo/time.svg)
-
-`mo` is a **M**arkdown viewer that **o**pens `.md` files in a browser.
+A fork of [k1LoW/mo](https://github.com/k1LoW/mo) with [Cue Markdown](https://github.com/cuemd/cuemd) support added.
 
 ## Features
 
+- **Cue Markdown support** — renders `.cue.md` and `.cuemd` directives (callouts, tabs, badges, etc.)
 - GitHub-flavored Markdown (tables, task lists, footnotes, etc.)
 - Syntax highlighting ([Shiki](https://shiki.style/))
 - [Mermaid](https://mermaid.js.org/) diagram rendering
@@ -33,58 +28,62 @@
 - <img src="images/icons/restart.svg" width="16" height="16" alt="restart"> Server restart with session preservation
 - Auto session backup and restore
 - Drag-and-drop file addition from the OS file manager (content is loaded in-memory; live-reload is not supported for dropped files)
-- Stdin pipe support (`cat file.md | mo`)
+- Stdin pipe support (`cat file.cue.md | cuemo`)
 - Live-reload on save (for files opened via CLI)
 
 ## Install
 
-**homebrew tap:**
-
-```console
-$ brew install k1LoW/tap/mo
-```
-
 **manually:**
 
-Download binary from [releases page](https://github.com/k1LoW/mo/releases)
+Download binary from [releases page](https://github.com/aXisho/cuemo/releases) or build from source (see below).
 
 ## Usage
 
 ``` console
-$ mo README.md                          # Open a single file
-$ mo README.md CHANGELOG.md docs/*.md   # Open multiple files
-$ mo docs/                              # Open all .md files in a directory
-$ mo spec.md --target design            # Open in a named group
-$ cat notes.md | mo                     # Read Markdown from stdin
+$ cuemo README.md                          # Open a single file
+$ cuemo README.md CHANGELOG.md docs/*.md   # Open multiple files
+$ cuemo docs/                              # Open all .md / .cue.md / .cuemd files in a directory
+$ cuemo spec.cue.md --target design        # Open a CueMD file in a named group
+$ cat notes.cue.md | cuemo                 # Read from stdin
 ```
 
-`mo` opens Markdown files in a browser with live-reload. When you save a file, the browser automatically reflects the changes.
+`cuemo` opens Markdown and Cue Markdown files in a browser with live-reload. When you save a file, the browser automatically reflects the changes. `.cue.md` and `.cuemd` files are rendered with CueMD directives (callouts, tabs, badges, etc.).
+
+### CueMD files
+
+`.cue.md` and `.cuemd` files are automatically detected and rendered with Cue Markdown support:
+
+``` console
+$ cuemo spec.cue.md            # Renders CueMD directives
+$ cuemo docs/api.cuemd         # Compact CueMD syntax
+$ cuemo -w '**/*.cue.md'       # Watch all .cue.md files
+```
 
 ### Reading from stdin
 
-When no positional arguments are given and stdin is redirected (not a terminal), `mo` reads Markdown content from stdin.
+When no positional arguments are given and stdin is redirected (not a terminal), `cuemo` reads Markdown content from stdin.
 
 ``` console
-$ cat notes.md | mo
-$ some-command | mo --target output
-$ mo < notes.md
+$ cat notes.md | cuemo
+$ some-command | cuemo --target output
+$ cuemo < notes.cue.md
 ```
 
 The content is loaded in-memory with a generated name (`stdin-<hash>.md`). Piping the same content again reuses the existing entry (deduplicated by content hash).
 
 ### Single server, multiple files
 
-By default, `mo` runs a single server on port `6275`. If a server is already running on the same port, subsequent `mo` invocations add files to the existing session instead of starting a new one.
+By default, `cuemo` runs a single server on port `6275`. If a server is already running on the same port, subsequent `cuemo` invocations add files to the existing session instead of starting a new one.
 
 ``` console
-$ mo README.md          # Starts a mo server in the background
-$ mo CHANGELOG.md       # Adds the file to the running mo server
+$ cuemo README.md          # Starts a cuemo server in the background
+$ cuemo CHANGELOG.md       # Adds the file to the running cuemo server
 ```
 
 To run a completely separate session, use a different port:
 
 ``` console
-$ mo draft.md -p 6276
+$ cuemo draft.md -p 6276
 ```
 
 ![Multiple files with sidebar](images/multiple-files.png)
@@ -94,9 +93,9 @@ $ mo draft.md -p 6276
 Files can be organized into named groups using the `--target` (`-t`) flag. Each group gets its own URL path and sidebar.
 
 ``` console
-$ mo spec.md --target design      # Opens at http://localhost:6275/design
-$ mo api.md --target design       # Adds to the "design" group
-$ mo notes.md --target notes      # Opens at http://localhost:6275/notes
+$ cuemo spec.md --target design      # Opens at http://localhost:6275/design
+$ cuemo api.md --target design       # Adds to the "design" group
+$ cuemo notes.md --target notes      # Opens at http://localhost:6275/notes
 ```
 
 ![Group view](images/groups.png)
@@ -106,25 +105,26 @@ $ mo notes.md --target notes      # Opens at http://localhost:6275/notes
 `--watch` (`-w`) turns on watch mode. Directory and glob positional arguments are registered as watch patterns, matching files are opened, and new matching files are picked up automatically.
 
 ``` console
-$ mo -w '**/*.md'                              # Watch and open all .md files recursively
-$ mo -w 'docs/**/*.md' --target docs           # Watch docs/ tree in "docs" group
-$ mo -w '*.md' 'docs/**/*.md'                  # Multiple patterns (positional)
-$ mo -w docs/                                  # Watch docs/*.md
+$ cuemo -w '**/*.md'                              # Watch and open all .md files recursively
+$ cuemo -w '**/*.cue.md'                          # Watch all .cue.md files
+$ cuemo -w 'docs/**/*.md' --target docs           # Watch docs/ tree in "docs" group
+$ cuemo -w '*.md' 'docs/**/*.md'                  # Multiple patterns (positional)
+$ cuemo -w docs/                                  # Watch docs/*.md
 ```
 
 Combine with `--recursive` (`-R`) to descend into subdirectories. Short flags can be combined:
 
 ``` console
-$ mo -w -R docs/                               # Watch docs/**/*.md
-$ mo -wR docs/                                 # Same, short-combined
+$ cuemo -w -R docs/                               # Watch docs/**/*.md
+$ cuemo -wR docs/                                 # Same, short-combined
 ```
 
 Without `--watch`, globs are expanded once and directory arguments open matching files without live-watching new additions:
 
 ``` console
-$ mo docs/                                     # Open every .md directly in docs/
-$ mo -R docs/                                  # Open every .md under docs/ (recursive)
-$ mo 'docs/*.md'                               # Expand and open matching .md files
+$ cuemo docs/                                     # Open every .md directly in docs/
+$ cuemo -R docs/                                  # Open every .md under docs/ (recursive)
+$ cuemo 'docs/*.md'                               # Expand and open matching .md files
 ```
 
 #### Removing watch patterns
@@ -132,15 +132,15 @@ $ mo 'docs/*.md'                               # Expand and open matching .md fi
 `--unwatch` removes previously registered patterns. Pass glob patterns or directories as positional arguments to specify which patterns to remove. Regular file paths are not accepted (use `--close` to remove individual files from the sidebar). Files already added by a pattern remain in the sidebar.
 
 ``` console
-$ mo --unwatch '**/*.md'                              # Stop watching a pattern (default group)
-$ mo --unwatch docs/                                  # Stop watching docs/*.md
-$ mo --unwatch 'docs/**/*.md' --target docs            # Stop watching in a specific group
+$ cuemo --unwatch '**/*.md'                              # Stop watching a pattern (default group)
+$ cuemo --unwatch docs/                                  # Stop watching docs/*.md
+$ cuemo --unwatch 'docs/**/*.md' --target docs            # Stop watching in a specific group
 ```
 
 With `-R`, a directory argument removes **all** registered patterns under that directory at once. For example, if `docs/*.md`, `docs/sub/*.md`, and `docs/**/*.md` are all registered, a single command removes them all:
 
 ``` console
-$ mo --unwatch -R docs/                               # Removes docs/*.md, docs/sub/*.md, docs/**/*.md, etc.
+$ cuemo --unwatch -R docs/                               # Removes docs/*.md, docs/sub/*.md, docs/**/*.md, etc.
 ```
 
 Patterns are resolved to absolute paths before matching, so you can specify either a relative glob or the full path shown by `--status`.
@@ -155,62 +155,62 @@ The sidebar supports flat and tree view modes. Flat view shows file names only, 
 
 ### Starting and stopping
 
-`mo` runs in the background by default — the command returns immediately, leaving the shell free for other work. This makes it easy to incorporate into scripts, tool chains, or LLM-driven workflows.
+`cuemo` runs in the background by default — the command returns immediately, leaving the shell free for other work. This makes it easy to incorporate into scripts, tool chains, or LLM-driven workflows.
 
 ``` console
-$ mo README.md
-mo: serving at http://localhost:6275 (pid 12345)
+$ cuemo README.md
+cuemo: serving at http://localhost:6275 (pid 12345)
 $ # shell is available immediately
 ```
 
-Use `--status` to check all running mo servers, and `--shutdown` to stop one:
+Use `--status` to check all running cuemo servers, and `--shutdown` to stop one:
 
 ``` console
-$ mo --status              # Show all running mo servers
-http://localhost:6275 (pid 12345, v0.12.0)
+$ cuemo --status              # Show all running cuemo servers
+http://localhost:6275 (pid 12345, v0.1.0)
   default: 5 file(s)
     watching: /Users/you/project/src/**/*.md, /Users/you/project/*.md
   docs: 2 file(s)
     watching: /Users/you/project/docs/**/*.md
 
-$ mo --shutdown            # Shut down the mo server on the default port
-$ mo --shutdown -p 6276    # Shut down the mo server on a specific port
-$ mo --restart             # Restart the mo server on the default port
+$ cuemo --shutdown            # Shut down the cuemo server on the default port
+$ cuemo --shutdown -p 6276    # Shut down the cuemo server on a specific port
+$ cuemo --restart             # Restart the cuemo server on the default port
 ```
 
-If you need the mo server to run in the foreground (e.g. for debugging), use `--foreground`:
+If you need the cuemo server to run in the foreground (e.g. for debugging), use `--foreground`:
 
 ``` console
-$ mo --foreground README.md
+$ cuemo --foreground README.md
 ```
 
 ### Server restart
 
-Click the <img src="images/icons/restart.svg" width="16" height="16" alt="restart"> restart button (bottom-right corner) or run `mo --restart` to restart the `mo` server process. The current session — all open files and groups — is preserved across the restart. This is useful when you have updated the `mo` binary and want to pick up the new version without re-opening your files.
+Click the <img src="images/icons/restart.svg" width="16" height="16" alt="restart"> restart button (bottom-right corner) or run `cuemo --restart` to restart the `cuemo` server process. The current session — all open files and groups — is preserved across the restart.
 
 ### Session backup and restore
 
-`mo` automatically saves session state (open files and watch patterns per group) when files are added or removed. When starting a new server, the previous session is automatically restored and merged with any files specified on the command line. Restored session entries appear first, followed by newly specified files.
+`cuemo` automatically saves session state (open files and watch patterns per group) when files are added or removed. When starting a new server, the previous session is automatically restored and merged with any files specified on the command line.
 
 ``` console
-$ mo README.md CHANGELOG.md       # Start with two files
-$ mo --shutdown                   # Shut down the server
-$ mo                              # Restores README.md and CHANGELOG.md
-$ mo TODO.md                      # Restores previous session + adds TODO.md
+$ cuemo README.md CHANGELOG.md       # Start with two files
+$ cuemo --shutdown                   # Shut down the server
+$ cuemo                              # Restores README.md and CHANGELOG.md
+$ cuemo TODO.md                      # Restores previous session + adds TODO.md
 ```
 
 Use `--close` to remove specific files from the running server:
 
 ``` console
-$ mo --close README.md            # Close a file from the default group
-$ mo --close docs/*.md -t docs    # Close files from the "docs" group
+$ cuemo --close README.md            # Close a file from the default group
+$ cuemo --close docs/*.md -t docs    # Close files from the "docs" group
 ```
 
 Use `--clear` to remove a saved session. If a server is running, it is automatically restarted with an empty state:
 
 ``` console
-$ mo --clear                      # Clear saved session for the default port
-$ mo --clear -p 6276              # Clear saved session for a specific port
+$ cuemo --clear                      # Clear saved session for the default port
+$ cuemo --clear -p 6276              # Clear saved session for a specific port
 ```
 
 ### JSON output
@@ -218,7 +218,7 @@ $ mo --clear -p 6276              # Clear saved session for a specific port
 Use `--json` to get structured JSON output on stdout, useful for scripting and integration with other tools.
 
 ``` console
-$ mo --json README.md
+$ cuemo --json README.md
 {
   "url": "http://localhost:6275",
   "files": [
@@ -234,13 +234,13 @@ $ mo --json README.md
 `--status` also supports `--json`:
 
 ``` console
-$ mo --status --json
+$ cuemo --status --json
 [
   {
     "url": "http://localhost:6275",
     "status": "running",
     "pid": 12345,
-    "version": "0.15.0",
+    "version": "0.1.0",
     "revision": "abc1234",
     "groups": [
       {
@@ -262,36 +262,41 @@ $ mo --status --json
 | `--bind` | `-b` | `localhost` | Bind address (e.g. `0.0.0.0`) |
 | `--open` | | | Always open browser |
 | `--no-open` | | | Never open browser |
-| `--status` | | | Show all running mo servers |
+| `--status` | | | Show all running cuemo servers |
 | `--watch` | `-w` | `false` | Treat directory and glob arguments as watch patterns |
 | `--unwatch` | | `false` | Remove watched patterns for the given directory or glob arguments |
 | `--recursive` | `-R` | `false` | Recurse into subdirectories when a directory is given |
 | `--close` | | | Close files instead of opening them |
-| `--shutdown` | | | Shut down the running mo server |
-| `--restart` | | | Restart the running mo server |
+| `--shutdown` | | | Shut down the running cuemo server |
+| `--restart` | | | Restart the running cuemo server |
 | `--clear` | | | Clear saved session (restarts server if running) |
-| `--foreground` | | | Run mo server in foreground |
+| `--foreground` | | | Run cuemo server in foreground |
 | `--json` | | | Output structured data as JSON to stdout |
 | `--dangerously-allow-remote-access` | | | Allow remote access without authentication (trusted networks only) |
 
 > [!WARNING]
-> Binding to a non-localhost address exposes mo to the network **without any authentication**. Remote clients can read any file accessible by the user, browse the filesystem via glob patterns, and shut down the server. A confirmation prompt is shown when `--bind` is set to a non-loopback address.
+> Binding to a non-localhost address exposes cuemo to the network **without any authentication**. Remote clients can read any file accessible by the user, browse the filesystem via glob patterns, and shut down the server. A confirmation prompt is shown when `--bind` is set to a non-loopback address.
 
 ## Build
 
-Requires Go and [pnpm](https://pnpm.io/).
+Requires Go 1.26+ and [pnpm](https://pnpm.io/).
 
 ``` console
 $ make build
 ```
 
+The resulting binary is named `cuemo`. To rename the binary during build:
+
+``` console
+$ go build -o cuemo .
+```
+
 ## References
 
-- [yusukebe/gh-markdown-preview](https://github.com/yusukebe/gh-markdown-preview): GitHub CLI extension to preview Markdown looks like GitHub.
+- [k1LoW/mo](https://github.com/k1LoW/mo): the upstream Markdown viewer this project is forked from.
+- [cuemd/cuemd](https://github.com/cuemd/cuemd): Cue Markdown specification.
+- [yusukebe/gh-markdown-preview](https://github.com/yusukebe/gh-markdown-preview): GitHub CLI extension to preview Markdown.
 
 ## License
 
 - [MIT License](LICENSE)
-    - Include logo as well as source code.
-    - Only logo license can be selected [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/).
-    - Also, if there is no alteration to the logo and it is used for technical information about mo, I would not say anything if the copyright notice is omitted.
