@@ -35,7 +35,7 @@ const ALERT_TYPE_TO_DIRECTIVE: Record<string, string> = {
   CAUTION: "danger",
 };
 
-const BLOCK_DIRECTIVES = ["details", "card"];
+const BLOCK_DIRECTIVES = ["details", "card", "embed"];
 const CONTAINER_DIRECTIVES = ["tabs", "steps", "grid"];
 const CHILD_DIRECTIVES = ["tab", "step", "cell"];
 
@@ -351,10 +351,9 @@ function parseLines(lines: string[]): GlossChild[] {
         const typeLower = ac.rawType.toLowerCase();
         const directiveName = ALERT_TYPE_TO_DIRECTIVE[typeUpper];
 
-        if (directiveName) {
+        if (directiveName && !ac.titleOrTail) {
           flushText();
           const attrs: Record<string, string> = ac.attrsText ? parseAttrs(ac.attrsText) : {};
-          if (ac.titleOrTail) attrs.title = ac.titleOrTail;
           const innerChildren = parseLines(ac.bodyLines);
           mergeInlineParas(innerChildren);
           out.push({
@@ -369,10 +368,9 @@ function parseLines(lines: string[]): GlossChild[] {
           continue;
         }
 
-        if (VOID_DIRECTIVES.has(typeLower)) {
+        if (VOID_DIRECTIVES.has(typeLower) && !ac.titleOrTail) {
           flushText();
           const attrs: Record<string, string> = ac.attrsText ? parseAttrs(ac.attrsText) : {};
-          if (ac.titleOrTail) attrs.title = ac.titleOrTail;
           out.push({
             kind: "cue",
             name: typeLower,

@@ -8,8 +8,9 @@ import rehypeSlug from "rehype-slug";
 import rehypeKatex from "rehype-katex";
 import { rehypeGithubAlerts } from "rehype-github-alerts";
 import { codeToHtml } from "shiki";
+import katex from "katex";
 import { GlossDirective, GlossTab, GlossTabsRenderer } from "./GlossDirective";
-import type { GlossChild, GlossNode, InlineParagraph } from "./treeParser";
+import type { GlossChild, GlossNode, InlineParagraph, TextNode } from "./treeParser";
 import { parseGlossMdTree } from "./treeParser";
 import { detectLanguage } from "../utils/filetype";
 
@@ -59,7 +60,19 @@ const mdSchema = {
   },
 };
 
-function GlossCodeBlock({ language, code }: { language: string; code: string }) {
+function GlossMathBlock({ code }: { code: string }) {
+  let html = "";
+  try {
+    html = katex.renderToString(code, { displayMode: true, throwOnError: false });
+  } catch {
+    // ignore
+  }
+  return html
+    ? <div className="math math-display" dangerouslySetInnerHTML={{ __html: html }} />
+    : <pre><code>{code}</code></pre>;
+}
+
+function GlossCodeBlock({ language, code, filename }: { language: string; code: string; filename?: string }) {
   const [html, setHtml] = useState("");
   useEffect(() => {
     let cancelled = false;
@@ -69,17 +82,27 @@ function GlossCodeBlock({ language, code }: { language: string; code: string }) 
       .catch(() => {});
     return () => { cancelled = true; };
   }, [code, language]);
-  if (html) return <div dangerouslySetInnerHTML={{ __html: html }} />;
-  return <pre><code>{code}</code></pre>;
+  return (
+    <div>
+      {filename && <div className="gloss-code-filename">{filename}</div>}
+      {html ? <div dangerouslySetInnerHTML={{ __html: html }} /> : <pre><code>{code}</code></pre>}
+    </div>
+  );
 }
 
 const mdComponents = {
   pre: ({ children }: { children?: React.ReactNode }) => <>{children}</>,
   code: ({ className, children }: { className?: string; children?: React.ReactNode }) => {
-    const rawLang = /language-([\w.+-]+)/.exec(className ?? "")?.[1];
+    const rawLang = /language-([^\s]+)/.exec(className ?? "")?.[1];
     const code = String(children).replace(/\n$/, "");
     const isBlock = String(children).endsWith("\n");
-    if (rawLang) return <GlossCodeBlock language={resolveLang(rawLang)} code={code} />;
+    if (rawLang) {
+      const colonIdx = rawLang.indexOf(":");
+      const lang = colonIdx >= 0 ? rawLang.slice(0, colonIdx) : rawLang;
+      const filename = colonIdx >= 0 ? rawLang.slice(colonIdx + 1) : undefined;
+      if (lang === "math") return <GlossMathBlock code={code} />;
+      return <GlossCodeBlock language={resolveLang(lang)} code={code} filename={filename} />;
+    }
     if (isBlock) return <GlossCodeBlock language="text" code={code} />;
     return <code className={className}>{children}</code>;
   },
@@ -167,6 +190,15 @@ function renderChild(child: GlossChild, key: number, parentInline = false): Reac
 
 function GlossNodeRenderer({ node, parentInline = false }: { node: GlossNode; parentInline?: boolean }) {
   const isInline = node.inline || parentInline;
+
+  if (node.name === "embed") {
+    const url = node.children
+      .filter((c): c is TextNode => c.kind === "text")
+      .map((c) => c.content.trim())
+      .join("")
+      .trim();
+    return <GlossDirective name="embed" attrs={{ url }} inline={false} selfClosing={false} />;
+  }
 
   if (node.name === "tabs") {
     const tabs = node.children
