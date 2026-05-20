@@ -1,22 +1,29 @@
-// Matches: https://gist.github.com/USER/GISTID.js or ...GISTID.js?file=...
-const GIST_SCRIPT_RE = /^https:\/\/gist\.github\.com\/([^/]+\/[a-f0-9]+)\.js(\?.*)?$/;
+// Matches https://gist.github.com/USER/GISTID with optional ?file=... query
+const GIST_URL_RE = /^https:\/\/gist\.github\.com\/([^/]+\/[^/?#]+)(\?.*)?$/;
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function isGistAnchor(node: any): { gistId: string; file: string | null } | null {
+  if (node.type !== "element" || node.tagName !== "a") return null;
+  const href = String(node.properties?.href ?? "");
+  const match = href.match(GIST_URL_RE);
+  if (!match) return null;
+  const query = match[2] ? new URLSearchParams(match[2].slice(1)) : null;
+  return { gistId: match[1], file: query?.get("file") ?? null };
+}
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function walk(node: any, parent: any, index: number) {
+  // Detect <p><a href="https://gist.github.com/USER/GISTID">...</a></p>
+  // (remark-gfm auto-links bare URLs, producing exactly this structure)
   if (
     node.type === "element" &&
-    node.tagName === "script" &&
-    node.properties?.src
+    node.tagName === "p" &&
+    node.children.length === 1
   ) {
-    const src = String(node.properties.src);
-    const match = src.match(GIST_SCRIPT_RE);
-    if (match) {
-      const gistId = match[1];
-      const query = match[2] ? new URLSearchParams(match[2].slice(1)) : null;
-      const file = query?.get("file") ?? null;
-
-      const props: Record<string, string> = { "data-gist-id": gistId };
-      if (file) props["data-gist-file"] = file;
+    const gist = isGistAnchor(node.children[0]);
+    if (gist) {
+      const props: Record<string, string> = { "data-gist-id": gist.gistId };
+      if (gist.file) props["data-gist-file"] = gist.file;
 
       parent.children[index] = {
         type: "element",
