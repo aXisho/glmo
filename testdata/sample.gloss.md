@@ -8,21 +8,21 @@ A reference document showcasing every directive in the Gloss Markdown standard s
 
 ## Callouts
 
-The five callouts map onto GitHub Alert types so they render natively in plain Markdown viewers.
+The five callouts map onto GitHub Alert types so they render natively in plain Markdown viewers. The `[!TYPE]` marker must appear alone on the first line — any text after the closing `]` causes the block to be treated as a regular blockquote.
 
-> [!NOTE] Info
+> [!NOTE]
 > Use this directive to highlight informational content.
 
-> [!TIP] Tip
+> [!TIP]
 > You can nest **Markdown** inside any block directive.
 
-> [!IMPORTANT] Important
+> [!IMPORTANT]
 > Read this before running the migration — it cannot be undone.
 
-> [!WARNING] Warning
+> [!WARNING]
 > This option cannot be changed after initialization.
 
-> [!CAUTION] Danger
+> [!CAUTION]
 > Deleting this file is irreversible.
 
 ---
@@ -34,6 +34,16 @@ When a Markdown heading's only child is a `heading` inline directive, the headin
 ### `Sub-section`{heading color=green}
 
 Pick any allowed colour: `gray`, `blue`, `green`, `yellow`, `red`, `purple`.
+
+### `Indented headings`{heading color=purple}
+
+The `indent` attribute shifts a heading right, useful for expressing hierarchy without changing the heading level.
+
+## `Top-level`{heading color=blue}
+
+## `One level in`{heading color=blue indent=1}
+
+## `Two levels in`{heading color=blue indent=2}
 
 ---
 
@@ -59,16 +69,16 @@ The constant factor still matters[^big-o], even when an algorithm is asymptotica
 
 ## Syntax highlighting
 
-Code fences accept either a **language name** or a **file extension**.
+Code fences accept either a **language name** or a **file extension**. Append `:filename` to display a file label above the block.
 
-```ts
+```ts:internal/frontend/src/gloss/treeParser.ts
 export function parseGlossMdTree(source: string): GlossChild[] {
   const lines = source.split("\n");
   return parseLines(lines);
 }
 ```
 
-```go
+```go:cmd/main.go
 func ParseGlossMd(src string) []GlossChild {
     return parseLines(strings.Split(src, "\n"))
 }
@@ -276,3 +286,25 @@ cuemo README.gloss.md
 The browser reloads automatically on every save.
 ```
 ````
+
+---
+
+## Embed
+
+Use an `embed` block directive to embed a URL as an inline frame. YouTube, Figma, and CodePen URLs are automatically converted to their embed form.
+
+```embed
+https://youtu.be/j7CDb610Bg0
+```
+
+---
+
+## Math (KaTeX)
+
+Block equations use a ` ```math ` fence:
+
+```math
+E = mc^2
+```
+
+Inline equations use the `{math}` directive: the equation `E = mc^2`{math} relates energy and mass.

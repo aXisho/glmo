@@ -1,4 +1,5 @@
 import { useState, useEffect, Children, isValidElement, type ReactNode } from "react";
+import katex from "katex";
 import { SAFE_URL_PATTERN, ALLOWED_COLORS } from "./parser";
 
 // ────────────────────────────────────────────────────────────────────────────
@@ -13,6 +14,20 @@ function safeColor(color: string | undefined, fallback: string = "gray"): string
 function isSafeHref(href: string | undefined): boolean {
   if (!href) return false;
   return SAFE_URL_PATTERN.test(href);
+}
+
+function toEmbedSrc(url: string): string | null {
+  if (!/^https?:\/\//.test(url)) return null;
+  const ytWatch = /^https?:\/\/(?:www\.)?youtube\.com\/watch\?(?:.*&)?v=([A-Za-z0-9_-]+)/.exec(url);
+  if (ytWatch) return `https://www.youtube.com/embed/${ytWatch[1]}`;
+  const ytShort = /^https?:\/\/youtu\.be\/([A-Za-z0-9_-]+)/.exec(url);
+  if (ytShort) return `https://www.youtube.com/embed/${ytShort[1]}`;
+  if (/^https?:\/\/www\.figma\.com\/(file|design|proto)\//.test(url)) {
+    return `https://www.figma.com/embed?embed_host=share&url=${encodeURIComponent(url)}`;
+  }
+  const cpPen = /^https?:\/\/codepen\.io\/([^/]+)\/pen\/([A-Za-z0-9]+)/.exec(url);
+  if (cpPen) return `https://codepen.io/${cpPen[1]}/embed/${cpPen[2]}?default-tab=result`;
+  return url;
 }
 
 function clampLevel(raw: string | undefined): number {
@@ -245,13 +260,57 @@ export function GlossDirective({ name, attrs, children, inline = false }: GlossD
       return <span className="gloss-big">{children}</span>;
     case "kbd":
       return <kbd className="gloss-kbd">{children}</kbd>;
+    case "math": {
+      const expr = childrenToText(children);
+      let html = "";
+      try {
+        html = katex.renderToString(expr, { displayMode: false, throwOnError: false });
+      } catch {
+        // ignore
+      }
+      return html
+        ? <span className="math math-inline" dangerouslySetInnerHTML={{ __html: html }} />
+        : <code>{expr}</code>;
+    }
     case "heading": {
       const color = safeColor(attrs.color);
+      const rawIndent = parseInt(attrs.indent ?? "0", 10);
+      const indent = Number.isFinite(rawIndent) && rawIndent > 0 ? rawIndent : 0;
       const level = clampLevel(attrs.level);
       const className = `gloss-heading gloss-heading-color-${color}`;
       const id = slugify(childrenToText(children));
       const H = `h${level}` as "h1" | "h2" | "h3" | "h4" | "h5" | "h6";
-      return <H id={id} className={className}>{children}</H>;
+      const style = indent > 0 ? { marginLeft: `${indent * 1.5}rem` } : undefined;
+      return <H id={id} className={className} style={style}>{children}</H>;
+    }
+    case "embed": {
+      const url = attrs.url?.trim();
+      if (!url || !isSafeHref(url)) {
+        return (
+          <div className="gloss-embed gloss-embed-invalid">
+            <span>embed: invalid URL</span>
+          </div>
+        );
+      }
+      const src = toEmbedSrc(url);
+      if (!src) {
+        return (
+          <div className="gloss-embed gloss-embed-link">
+            <a href={url} target="_blank" rel="noopener noreferrer">{url}</a>
+          </div>
+        );
+      }
+      return (
+        <div className="gloss-embed">
+          <iframe
+            src={src}
+            title="Embedded content"
+            allowFullScreen
+            loading="lazy"
+            sandbox="allow-scripts allow-same-origin allow-popups allow-forms allow-presentation"
+          />
+        </div>
+      );
     }
     case "toc":
       return <GlossToc title={attrs.title} depth={attrs.depth ? Number(attrs.depth) : undefined} />;
