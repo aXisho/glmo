@@ -21,6 +21,8 @@ import { resolveLink, resolveImageSrc, extractLanguage } from "../utils/resolve"
 import { parseFrontmatter } from "../utils/frontmatter";
 import { stripMdxSyntax } from "../utils/mdx";
 import { isMarkdownFile, detectLanguage, detectGlossFileType } from "../utils/filetype";
+import { rehypeGistEmbed } from "../utils/rehypeGistEmbed";
+import { GistEmbed } from "./GistEmbed";
 import { GlossDocumentRenderer } from "../gloss/GlossDocumentRenderer";
 import "../gloss/styles.css";
 import type { ZoomContent } from "./ZoomModal";
@@ -60,7 +62,7 @@ const sanitizeSchema = {
   attributes: {
     ...defaultSchema.attributes,
     span: [...(defaultSchema.attributes?.["span"] || []), "style"],
-    div: [...(defaultSchema.attributes?.["div"] || []), "style", "align"],
+    div: [...(defaultSchema.attributes?.["div"] || []), "style", "align", "data-gist-id", "data-gist-file"],
   },
 };
 
@@ -716,7 +718,14 @@ export function MarkdownViewer({
         }
         return <img src={resolveImageSrc(src, activeGroup, fileId)} alt={alt} {...props} />;
       },
-      div: ({ node: _node, ...props }) => <div {...props} />,
+      div: ({ node: _node, ...props }) => {
+        const gistId = props["data-gist-id" as keyof typeof props] as string | undefined;
+        const gistFile = props["data-gist-file" as keyof typeof props] as string | undefined;
+        if (gistId) {
+          return <GistEmbed gistId={gistId} file={gistFile} />;
+        }
+        return <div {...props} />;
+      },
       span: ({ node: _node, ...props }) => <span {...props} />,
       a: ({ href, children, ...props }) => {
         const resolved = resolveLink(href, activeGroup, fileId);
@@ -802,6 +811,7 @@ export function MarkdownViewer({
           remarkPlugins={[remarkGfm, remarkMath]}
           rehypePlugins={[
             rehypeRaw,
+            rehypeGistEmbed,
             rehypeStripClobberPrefix,
             [rehypeSanitize, sanitizeSchema],
             rehypeGithubAlerts,
