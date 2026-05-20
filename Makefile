@@ -15,10 +15,10 @@ test:
 	go test ./... -coverprofile=coverage.out -covermode=count -count=1
 
 build: generate
-	go build -ldflags=$(BUILD_LDFLAGS) -trimpath -o mo .
+	go build -ldflags=$(BUILD_LDFLAGS) -trimpath -o glmo .
 
 dev: build
-	./mo -p 16275 --foreground $(ARGS)
+	./glmo -p 16275 --foreground $(ARGS)
 
 screenshot: build
 	cd internal/frontend && pnpm run screenshots

@@ -20,9 +20,9 @@ import { CloseFileButton } from "./CloseFileButton";
 import { resolveLink, resolveImageSrc, extractLanguage } from "../utils/resolve";
 import { parseFrontmatter } from "../utils/frontmatter";
 import { stripMdxSyntax } from "../utils/mdx";
-import { isMarkdownFile, detectLanguage, detectCueFileType } from "../utils/filetype";
-import { CueDocumentRenderer } from "../cue/CueDocumentRenderer";
-import "../cue/styles.css";
+import { isMarkdownFile, detectLanguage, detectGlossFileType } from "../utils/filetype";
+import { GlossDocumentRenderer } from "../gloss/GlossDocumentRenderer";
+import "../gloss/styles.css";
 import type { ZoomContent } from "./ZoomModal";
 import type { TocHeading } from "./TocPanel";
 import type { Components } from "react-markdown";
@@ -768,7 +768,7 @@ export function MarkdownViewer({
 
   const isMarkdown = isMarkdownFile(fileName);
   const codeLanguage = isMarkdown ? null : detectLanguage(fileName);
-  const cueFileType = detectCueFileType(fileName ?? "");
+  const glossFileType = detectGlossFileType(fileName ?? "");
 
   const parsed = useMemo(
     () => (isMarkdown && !isRawView ? parseFrontmatter(content) : null),
@@ -784,12 +784,12 @@ export function MarkdownViewer({
     }
     const base = parsed ? parsed.content : content;
 
-    // Cue Markdown files (.cue.md and .cuemd) go through the tree-based renderer
-    if (cueFileType === "cue") {
+    // Gloss Markdown files (.gloss.md) go through the tree-based renderer
+    if (glossFileType === "gloss.md") {
       return (
         <>
           {parsed && <FrontmatterBlock yaml={parsed.yaml} />}
-          <CueDocumentRenderer source={base} />
+          <GlossDocumentRenderer source={base} />
         </>
       );
     }
@@ -814,7 +814,7 @@ export function MarkdownViewer({
         </Markdown>
       </>
     );
-  }, [content, isRawView, isMarkdown, codeLanguage, parsed, components, fileName, cueFileType]);
+  }, [content, isRawView, isMarkdown, codeLanguage, parsed, components, fileName, glossFileType]);
 
   const prevHeadingsKey = useRef("");
   useEffect(() => {
