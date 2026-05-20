@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { isMarkdownFile, detectLanguage } from "./filetype";
+import { isMarkdownFile, detectGlossFileType, detectLanguage } from "./filetype";
 
 describe("isMarkdownFile", () => {
   it("returns true for .md files", () => {
@@ -28,6 +28,27 @@ describe("isMarkdownFile", () => {
 
   it("returns false for files without extension", () => {
     expect(isMarkdownFile("Makefile")).toBe(false);
+  });
+
+  it("returns true for .gloss.md files", () => {
+    expect(isMarkdownFile("spec.gloss.md")).toBe(true);
+  });
+});
+
+describe("detectGlossFileType", () => {
+  it("returns gloss.md for .gloss.md files", () => {
+    expect(detectGlossFileType("spec.gloss.md")).toBe("gloss.md");
+    expect(detectGlossFileType("SPEC.GLOSS.MD")).toBe("gloss.md");
+  });
+
+  it("returns markdown for plain .md files", () => {
+    expect(detectGlossFileType("README.md")).toBe("markdown");
+    expect(detectGlossFileType("notes.mdx")).toBe("markdown");
+  });
+
+  it("returns other for non-markdown files", () => {
+    expect(detectGlossFileType("main.go")).toBe("other");
+    expect(detectGlossFileType("config.json")).toBe("other");
   });
 });
 

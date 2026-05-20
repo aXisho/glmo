@@ -1,4 +1,4 @@
-// Cue Markdown parser — returns a CueChild[] tree.
+// Gloss Markdown parser — returns a GlossChild[] tree.
 //
 // Recognizes:
 //   - GitHub Alert callouts: > [!NOTE|TIP|IMPORTANT|WARNING|CAUTION] title + body
@@ -11,19 +11,19 @@ import { parseAttrs } from "./parser";
 
 // ── AST types ────────────────────────────────────────────────────────────────
 
-export type CueNode = {
+export type GlossNode = {
   kind: "cue";
   name: string;
   attrs: Record<string, string>;
-  children: CueChild[];
+  children: GlossChild[];
   inline: boolean;
   selfClosing: boolean;
 };
 
 export type TextNode = { kind: "text"; content: string };
-/** A paragraph that contains a mix of text and inline CueNodes. */
-export type InlineParagraph = { kind: "inline-para"; children: CueChild[] };
-export type CueChild = CueNode | TextNode | InlineParagraph;
+/** A paragraph that contains a mix of text and inline GlossNodes. */
+export type InlineParagraph = { kind: "inline-para"; children: GlossChild[] };
+export type GlossChild = GlossNode | TextNode | InlineParagraph;
 
 // ── Directive vocabulary ─────────────────────────────────────────────────────
 
@@ -56,12 +56,12 @@ const FENCED_BLOCK_NAMES = new Set<string>([
 //
 // Pattern: `text`{name attrs}
 // The brace block must close on the same line. If it doesn't, the inline code
-// span is left as plain text (no CueNode emitted).
+// span is left as plain text (no GlossNode emitted).
 
 const INLINE_RE = /`([^`\n]+)`\{([a-z][a-z0-9-]*)(\s+[^}\n]*)?\}/gi;
 
-function splitInlineLine(line: string): Array<CueNode | TextNode> {
-  const out: Array<CueNode | TextNode> = [];
+function splitInlineLine(line: string): Array<GlossNode | TextNode> {
+  const out: Array<GlossNode | TextNode> = [];
   let lastIdx = 0;
   INLINE_RE.lastIndex = 0;
   let m: RegExpExecArray | null;
@@ -92,17 +92,12 @@ function splitInlineLine(line: string): Array<CueNode | TextNode> {
   return out;
 }
 
-/**
- * Apply inline splitting to a text body. Returns a flat list of TextNodes and
- * inline CueNodes; the caller is responsible for promoting inline runs to
- * InlineParagraph nodes via {@link mergeInlineParas}.
- */
-function applyInlineToText(text: string): Array<CueNode | TextNode> {
+function applyInlineToText(text: string): Array<GlossNode | TextNode> {
   if (!text) return [];
   if (text.indexOf("`") < 0) return [{ kind: "text", content: text }];
 
   const lines = text.split("\n");
-  const out: Array<CueNode | TextNode> = [];
+  const out: Array<GlossNode | TextNode> = [];
 
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
@@ -121,7 +116,7 @@ function applyInlineToText(text: string): Array<CueNode | TextNode> {
   return mergeTextRuns(out);
 }
 
-function appendText(arr: Array<CueNode | TextNode>, content: string): void {
+function appendText(arr: Array<GlossNode | TextNode>, content: string): void {
   const last = arr[arr.length - 1];
   if (last && last.kind === "text") {
     last.content += content;
@@ -252,27 +247,15 @@ function detectFence(lines: string[], start: number): FenceCapture | null {
 
 // ── Main parse entry points ──────────────────────────────────────────────────
 
-/**
- * Parse a Cue Markdown source string into a tree of CueChild nodes.
- *
- * The result combines:
- *   - CueNode (block) for callouts, fenced directives, void directives
- *   - CueNode (inline) for inline directives — these may also appear inside
- *     an InlineParagraph wrapper after post-processing
- *   - TextNode for raw Markdown text segments between directives
- *   - InlineParagraph that groups consecutive inline CueNodes with their
- *     surrounding same-line text (so the React renderer can emit a single
- *     <p> instead of splitting the run across multiple Markdown chunks)
- */
-export function parseCueMdTree(source: string): CueChild[] {
+export function parseGlossMdTree(source: string): GlossChild[] {
   const lines = source.split("\n");
   const tree = parseLines(lines);
   mergeInlineParas(tree);
   return tree;
 }
 
-function parseLines(lines: string[]): CueChild[] {
-  const out: CueChild[] = [];
+function parseLines(lines: string[]): GlossChild[] {
+  const out: GlossChild[] = [];
   let textBuf: string[] = [];
   let inFenceBuf = false;
   let fenceBufMarker = "";
@@ -413,13 +396,8 @@ function parseLines(lines: string[]): CueChild[] {
 }
 
 // ── mergeInlineParas ─────────────────────────────────────────────────────────
-//
-// Walks the tree and groups runs of inline CueNodes + same-line text fragments
-// into a single InlineParagraph. This matches the previous parser's behavior
-// so the React renderer can emit one <p> per inline run.
 
-function mergeInlineParas(children: CueChild[]): void {
-  // Recurse into block children
+function mergeInlineParas(children: GlossChild[]): void {
   for (const child of children) {
     if (child.kind === "cue" && !child.inline) {
       mergeInlineParas(child.children);
@@ -429,14 +407,13 @@ function mergeInlineParas(children: CueChild[]): void {
   let i = 0;
   while (i < children.length) {
     const node = children[i];
-    if (node.kind !== "cue" || !(node as CueNode).inline) {
+    if (node.kind !== "cue" || !(node as GlossNode).inline) {
       i++;
       continue;
     }
 
-    const run: CueChild[] = [];
+    const run: GlossChild[] = [];
 
-    // Take the tail of the previous TextNode (after its last newline)
     if (i > 0 && children[i - 1].kind === "text") {
       const prev = children[i - 1] as TextNode;
       const nlIdx = prev.content.lastIndexOf("\n");
@@ -451,11 +428,10 @@ function mergeInlineParas(children: CueChild[]): void {
       }
     }
 
-    // Consume consecutive inline CueNodes and text-without-newline
     let j = i;
     while (j < children.length) {
       const c = children[j];
-      if (c.kind === "cue" && (c as CueNode).inline) {
+      if (c.kind === "cue" && (c as GlossNode).inline) {
         run.push(c);
         j++;
         continue;

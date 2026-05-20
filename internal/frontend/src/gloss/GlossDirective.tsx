@@ -47,7 +47,7 @@ function slugify(text: string): string {
 }
 
 // ────────────────────────────────────────────────────────────────────────────
-// CueCallout
+// GlossCallout
 // ────────────────────────────────────────────────────────────────────────────
 
 type CalloutType = "info" | "tip" | "important" | "warning" | "danger";
@@ -70,12 +70,12 @@ const CALLOUT_DEFAULT_TITLES: Record<CalloutType, string> = {
 
 const CALLOUT_TYPES = new Set<string>(Object.keys(CALLOUT_ICONS));
 
-function CueCallout({ type, title, children }: { type: CalloutType; title?: string; children?: ReactNode }) {
+function GlossCallout({ type, title, children }: { type: CalloutType; title?: string; children?: ReactNode }) {
   const effectiveTitle = title ?? CALLOUT_DEFAULT_TITLES[type];
   return (
-    <div className={`cue-callout cue-callout-${type}`}>
+    <div className={`gloss-callout gloss-callout-${type}`}>
       {effectiveTitle && (
-        <div className="cue-callout-title">
+        <div className="gloss-callout-title">
           <span>{CALLOUT_ICONS[type] ?? ""}</span>
           {effectiveTitle}
         </div>
@@ -86,15 +86,15 @@ function CueCallout({ type, title, children }: { type: CalloutType; title?: stri
 }
 
 // ────────────────────────────────────────────────────────────────────────────
-// CueTab (thin wrapper — CueTabs inspects children for this type)
+// GlossTab (thin wrapper — GlossTabs inspects children for this type)
 // ────────────────────────────────────────────────────────────────────────────
 
-export function CueTab({ children }: { title?: string; color?: string; children?: ReactNode }) {
+export function GlossTab({ children }: { title?: string; color?: string; children?: ReactNode }) {
   return <>{children}</>;
 }
 
 // ────────────────────────────────────────────────────────────────────────────
-// CueTabs / CueTabsRenderer
+// GlossTabs / GlossTabsRenderer
 // ────────────────────────────────────────────────────────────────────────────
 
 type TabItem = { title: string; color?: string; content: ReactNode };
@@ -105,35 +105,35 @@ function TabsUI({ tabs, color }: { tabs: TabItem[]; color?: string }) {
   const safeIndex = Math.min(activeIndex, tabs.length - 1);
   const parentColor = safeColor(color, "blue");
   return (
-    <div className={`cue-tabs cue-color-${parentColor}`}>
-      <div className="cue-tabs-bar" role="tablist">
+    <div className={`gloss-tabs gloss-color-${parentColor}`}>
+      <div className="gloss-tabs-bar" role="tablist">
         {tabs.map((tab, idx) => (
           <button
             key={idx}
             role="tab"
             aria-selected={idx === safeIndex}
-            className={`cue-tabs-btn cue-color-${safeColor(tab.color, parentColor)}${idx === safeIndex ? " active" : ""}`}
+            className={`gloss-tabs-btn gloss-color-${safeColor(tab.color, parentColor)}${idx === safeIndex ? " active" : ""}`}
             onClick={() => setActiveIndex(idx)}
           >
             {tab.title}
           </button>
         ))}
       </div>
-      <div className="cue-tabs-panel" role="tabpanel">
+      <div className="gloss-tabs-panel" role="tabpanel">
         {tabs[safeIndex]?.content}
       </div>
     </div>
   );
 }
 
-export function CueTabsRenderer({ tabs, color }: { tabs: TabItem[]; color?: string }) {
+export function GlossTabsRenderer({ tabs, color }: { tabs: TabItem[]; color?: string }) {
   return <TabsUI tabs={tabs} color={color} />;
 }
 
-function CueTabs({ children, color }: { children?: ReactNode; color?: string }) {
+function GlossTabs({ children, color }: { children?: ReactNode; color?: string }) {
   const tabs: TabItem[] = [];
   Children.forEach(children, (child) => {
-    if (isValidElement(child) && child.type === CueTab) {
+    if (isValidElement(child) && child.type === GlossTab) {
       const props = child.props as { title?: string; color?: string; children?: ReactNode };
       tabs.push({ title: props.title ?? `Tab ${tabs.length + 1}`, color: props.color, content: props.children });
     }
@@ -143,20 +143,20 @@ function CueTabs({ children, color }: { children?: ReactNode; color?: string }) 
 }
 
 // ────────────────────────────────────────────────────────────────────────────
-// CueCard
+// GlossCard
 // ────────────────────────────────────────────────────────────────────────────
 
-function CueCard({ title, href, color, children }: { title?: string; href?: string; color?: string; children?: ReactNode }) {
-  const colorClass = color ? ` cue-color-${safeColor(color)}` : "";
+function GlossCard({ title, href, color, children }: { title?: string; href?: string; color?: string; children?: ReactNode }) {
+  const colorClass = color ? ` gloss-color-${safeColor(color)}` : "";
   const inner = (
-    <div className={`cue-card${colorClass}`}>
-      {title && <div className="cue-card-title">{title}</div>}
+    <div className={`gloss-card${colorClass}`}>
+      {title && <div className="gloss-card-title">{title}</div>}
       {children}
     </div>
   );
   if (isSafeHref(href)) {
     return (
-      <a href={href} className="cue-card-link" style={{ textDecoration: "none", color: "inherit" }}>
+      <a href={href} className="gloss-card-link" style={{ textDecoration: "none", color: "inherit" }}>
         {inner}
       </a>
     );
@@ -165,7 +165,7 @@ function CueCard({ title, href, color, children }: { title?: string; href?: stri
 }
 
 // ────────────────────────────────────────────────────────────────────────────
-// CueToc
+// GlossToc
 // ────────────────────────────────────────────────────────────────────────────
 
 interface TocEntry {
@@ -174,14 +174,12 @@ interface TocEntry {
   level: number;
 }
 
-function CueToc({ title, depth }: { title?: string; depth?: number }) {
+function GlossToc({ title, depth }: { title?: string; depth?: number }) {
   const maxDepth = depth ?? 3;
   const [entries, setEntries] = useState<TocEntry[]>([]);
 
   useEffect(() => {
-    // Scope to the Cue document and skip the auto-generated GFM footnote
-    // heading ("Footnotes" sr-only h2) so it doesn't pollute the TOC.
-    const root = document.querySelector(".cue-document") ?? document;
+    const root = document.querySelector(".gloss-document") ?? document;
     const result: TocEntry[] = [];
     for (const el of root.querySelectorAll("h1, h2, h3, h4, h5, h6")) {
       if (!el.id) continue;
@@ -193,8 +191,8 @@ function CueToc({ title, depth }: { title?: string; depth?: number }) {
   }, [maxDepth]);
 
   return (
-    <div className="cue-toc">
-      {title && <div className="cue-toc-title">{title}</div>}
+    <div className="gloss-toc">
+      {title && <div className="gloss-toc-title">{title}</div>}
       {entries.length > 0 && (
         <ol>
           {entries.map((e) => (
@@ -209,10 +207,10 @@ function CueToc({ title, depth }: { title?: string; depth?: number }) {
 }
 
 // ────────────────────────────────────────────────────────────────────────────
-// CueDirective — main dispatcher
+// GlossDirective — main dispatcher
 // ────────────────────────────────────────────────────────────────────────────
 
-interface CueDirectiveProps {
+interface GlossDirectiveProps {
   name: string;
   attrs: Record<string, string>;
   children?: ReactNode;
@@ -220,52 +218,48 @@ interface CueDirectiveProps {
   selfClosing?: boolean;
 }
 
-export function CueDirective({ name, attrs, children, inline = false }: CueDirectiveProps) {
+export function GlossDirective({ name, attrs, children, inline = false }: GlossDirectiveProps) {
   if (CALLOUT_TYPES.has(name)) {
-    return <CueCallout type={name as CalloutType} title={attrs.title}>{children}</CueCallout>;
+    return <GlossCallout type={name as CalloutType} title={attrs.title}>{children}</GlossCallout>;
   }
 
   switch (name) {
     case "details": {
       const color = safeColor(attrs.color, "gray");
       return (
-        <details className={`cue-details cue-color-${color}`} open={attrs.open === "true"}>
+        <details className={`gloss-details gloss-color-${color}`} open={attrs.open === "true"}>
           <summary>{attrs.title ?? "Details"}</summary>
           {children}
         </details>
       );
     }
     case "tabs":
-      return <CueTabs color={safeColor(attrs.color, "blue")}>{children}</CueTabs>;
+      return <GlossTabs color={safeColor(attrs.color, "blue")}>{children}</GlossTabs>;
     case "tab":
-      return <CueTab title={attrs.title} color={attrs.color}>{children}</CueTab>;
+      return <GlossTab title={attrs.title} color={attrs.color}>{children}</GlossTab>;
     case "badge":
-      return <span className={`cue-badge cue-color-${safeColor(attrs.color)}`}>{children}</span>;
-    case "mark":
-      return <mark className={`cue-mark cue-color-${safeColor(attrs.color)}`}>{children}</mark>;
+      return <span className={`gloss-badge gloss-color-${safeColor(attrs.color)}`}>{children}</span>;
     case "small":
-      return <small className="cue-small">{children}</small>;
+      return <small className="gloss-small">{children}</small>;
     case "big":
-      // <big> is obsolete in HTML5; we emit a span with our styling hook.
-      return <span className="cue-big">{children}</span>;
+      return <span className="gloss-big">{children}</span>;
     case "kbd":
-      return <kbd className="cue-kbd">{children}</kbd>;
+      return <kbd className="gloss-kbd">{children}</kbd>;
     case "heading": {
       const color = safeColor(attrs.color);
       const level = clampLevel(attrs.level);
-      const className = `cue-heading cue-heading-color-${color}`;
+      const className = `gloss-heading gloss-heading-color-${color}`;
       const id = slugify(childrenToText(children));
       const H = `h${level}` as "h1" | "h2" | "h3" | "h4" | "h5" | "h6";
       return <H id={id} className={className}>{children}</H>;
     }
     case "toc":
-      return <CueToc title={attrs.title} depth={attrs.depth ? Number(attrs.depth) : undefined} />;
-    // (`columns`/`column` removed — use `grid border=none` for the same effect.)
+      return <GlossToc title={attrs.title} depth={attrs.depth ? Number(attrs.depth) : undefined} />;
     case "card":
-      return <CueCard title={attrs.title} href={attrs.href} color={attrs.color}>{children}</CueCard>;
+      return <GlossCard title={attrs.title} href={attrs.href} color={attrs.color}>{children}</GlossCard>;
     case "grid": {
       const color = safeColor(attrs.color, "gray");
-      const borderClass = attrs.border === "none" ? " cue-border-none" : "";
+      const borderClass = attrs.border === "none" ? " gloss-border-none" : "";
       const cellCount = parseInt(attrs["_cell_count"] ?? "0", 10) || 0;
       const colsAttr = attrs.cols ? parseInt(attrs.cols, 10) : NaN;
       const rowsAttr = attrs.rows ? parseInt(attrs.rows, 10) : NaN;
@@ -278,28 +272,28 @@ export function CueDirective({ name, attrs, children, inline = false }: CueDirec
       const style: React.CSSProperties = { gridTemplateColumns: `repeat(${cols}, 1fr)` };
       if (hasRows) style.gridTemplateRows = `repeat(${rowsAttr}, auto)`;
       return (
-        <div className={`cue-grid cue-color-${color}${borderClass}`} style={style}>
+        <div className={`gloss-grid gloss-color-${color}${borderClass}`} style={style}>
           {children}
         </div>
       );
     }
     case "cell": {
-      const colorClass = attrs.color ? ` cue-color-${safeColor(attrs.color, "gray")}` : "";
+      const colorClass = attrs.color ? ` gloss-color-${safeColor(attrs.color, "gray")}` : "";
       const borderClass =
-        attrs.border === "none" ? " cue-border-none" : attrs.border === "solid" ? " cue-border-solid" : "";
+        attrs.border === "none" ? " gloss-border-none" : attrs.border === "solid" ? " gloss-border-solid" : "";
       return (
-        <div className={`cue-cell${colorClass}${borderClass}`}>
+        <div className={`gloss-cell${colorClass}${borderClass}`}>
           {attrs.title && <strong>{attrs.title}</strong>}
           {children}
         </div>
       );
     }
     case "steps":
-      return <ol className={`cue-steps cue-color-${safeColor(attrs.color, "blue")}`}>{children}</ol>;
+      return <ol className={`gloss-steps gloss-color-${safeColor(attrs.color, "blue")}`}>{children}</ol>;
     case "step": {
-      const colorClass = attrs.color ? ` cue-color-${safeColor(attrs.color, "blue")}` : "";
+      const colorClass = attrs.color ? ` gloss-color-${safeColor(attrs.color, "blue")}` : "";
       return (
-        <li className={`cue-step${colorClass}`}>
+        <li className={`gloss-step${colorClass}`}>
           {attrs.title && <strong>{attrs.title}</strong>}
           {children}
         </li>

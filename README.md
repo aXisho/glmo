@@ -1,12 +1,12 @@
 # cuemo
 
-`cuemo` is a **Cue**-enhanced **M**arkdown viewer that **o**pens `.md`, `.cue.md`, and `.cuemd` files in a browser.
+`cuemo` is a **Gloss** Markdown viewer that opens `.md` and `.gloss.md` files in a browser.
 
-A fork of [k1LoW/mo](https://github.com/k1LoW/mo) with [Cue Markdown](https://github.com/cuemd/cuemd) support added.
+A fork of [k1LoW/mo](https://github.com/k1LoW/mo) with [Gloss Markdown](https://github.com/aXisho/glossmd) support added.
 
 ## Features
 
-- **Cue Markdown support** — renders `.cue.md` and `.cuemd` directives (callouts, tabs, badges, etc.)
+- **Gloss Markdown support** — renders `.gloss.md` directives (callouts, tabs, badges, etc.)
 - GitHub-flavored Markdown (tables, task lists, footnotes, etc.)
 - Syntax highlighting ([Shiki](https://shiki.style/))
 - [Mermaid](https://mermaid.js.org/) diagram rendering
@@ -28,7 +28,7 @@ A fork of [k1LoW/mo](https://github.com/k1LoW/mo) with [Cue Markdown](https://gi
 - <img src="images/icons/restart.svg" width="16" height="16" alt="restart"> Server restart with session preservation
 - Auto session backup and restore
 - Drag-and-drop file addition from the OS file manager (content is loaded in-memory; live-reload is not supported for dropped files)
-- Stdin pipe support (`cat file.cue.md | cuemo`)
+- Stdin pipe support (`cat file.gloss.md | cuemo`)
 - Live-reload on save (for files opened via CLI)
 
 ## Install
@@ -42,21 +42,20 @@ Download binary from [releases page](https://github.com/aXisho/cuemo/releases) o
 ``` console
 $ cuemo README.md                          # Open a single file
 $ cuemo README.md CHANGELOG.md docs/*.md   # Open multiple files
-$ cuemo docs/                              # Open all .md / .cue.md / .cuemd files in a directory
-$ cuemo spec.cue.md --target design        # Open a CueMD file in a named group
-$ cat notes.cue.md | cuemo                 # Read from stdin
+$ cuemo docs/                              # Open all .md / .gloss.md files in a directory
+$ cuemo spec.gloss.md --target design      # Open a Gloss Markdown file in a named group
+$ cat notes.gloss.md | cuemo               # Read from stdin
 ```
 
-`cuemo` opens Markdown and Cue Markdown files in a browser with live-reload. When you save a file, the browser automatically reflects the changes. `.cue.md` and `.cuemd` files are rendered with CueMD directives (callouts, tabs, badges, etc.).
+`cuemo` opens Markdown and Gloss Markdown files in a browser with live-reload. When you save a file, the browser automatically reflects the changes. `.gloss.md` files are rendered with Gloss Markdown directives (callouts, tabs, badges, etc.).
 
-### CueMD files
+### Gloss Markdown files
 
-`.cue.md` and `.cuemd` files are automatically detected and rendered with Cue Markdown support:
+`.gloss.md` files are automatically detected and rendered with Gloss Markdown support:
 
 ``` console
-$ cuemo spec.cue.md            # Renders CueMD directives
-$ cuemo docs/api.cuemd         # Compact CueMD syntax
-$ cuemo -w '**/*.cue.md'       # Watch all .cue.md files
+$ cuemo spec.gloss.md          # Renders Gloss Markdown directives
+$ cuemo -w '**/*.gloss.md'     # Watch all .gloss.md files
 ```
 
 ### Reading from stdin
@@ -66,7 +65,7 @@ When no positional arguments are given and stdin is redirected (not a terminal),
 ``` console
 $ cat notes.md | cuemo
 $ some-command | cuemo --target output
-$ cuemo < notes.cue.md
+$ cuemo < notes.gloss.md
 ```
 
 The content is loaded in-memory with a generated name (`stdin-<hash>.md`). Piping the same content again reuses the existing entry (deduplicated by content hash).
@@ -106,7 +105,7 @@ $ cuemo notes.md --target notes      # Opens at http://localhost:6275/notes
 
 ``` console
 $ cuemo -w '**/*.md'                              # Watch and open all .md files recursively
-$ cuemo -w '**/*.cue.md'                          # Watch all .cue.md files
+$ cuemo -w '**/*.gloss.md'                        # Watch all .gloss.md files
 $ cuemo -w 'docs/**/*.md' --target docs           # Watch docs/ tree in "docs" group
 $ cuemo -w '*.md' 'docs/**/*.md'                  # Multiple patterns (positional)
 $ cuemo -w docs/                                  # Watch docs/*.md
@@ -294,7 +293,7 @@ $ go build -o cuemo .
 ## References
 
 - [k1LoW/mo](https://github.com/k1LoW/mo): the upstream Markdown viewer this project is forked from.
-- [cuemd/cuemd](https://github.com/cuemd/cuemd): Cue Markdown specification.
+- [aXisho/glossmd](https://github.com/aXisho/glossmd): Gloss Markdown specification.
 - [yusukebe/gh-markdown-preview](https://github.com/yusukebe/gh-markdown-preview): GitHub CLI extension to preview Markdown.
 
 ## License

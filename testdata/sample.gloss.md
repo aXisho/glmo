@@ -1,6 +1,6 @@
-# Cue Markdown Sample
+# Gloss Markdown Sample
 
-A reference document showcasing every directive in the Cue Markdown standard set. Both `.cue.md` and `.cuemd` use the same syntax — the extension is only a hint about whether the file is also meant to read well on GitHub.
+A reference document showcasing every directive in the Gloss Markdown standard set. `.gloss.md` files render natively on GitHub as plain Markdown and with full directives in cuemo.
 
 > [!toc title="Contents" depth=2]
 
@@ -43,7 +43,7 @@ This API is `Stable`{badge color=green}. The old one is `Deprecated`{badge color
 
 Press `Ctrl + S`{kbd} to save, or `Cmd + Z`{kbd} to undo.
 
-A `highlighted`{mark} word and `fine print`{small} text — the headline number is `1,247 users`{big}.
+`Fine print`{small} text — the headline number is `1,247 users`{big}.
 
 ---
 
@@ -62,21 +62,21 @@ The constant factor still matters[^big-o], even when an algorithm is asymptotica
 Code fences accept either a **language name** or a **file extension**.
 
 ```ts
-export function parseCueMdTree(source: string): CueChild[] {
+export function parseGlossMdTree(source: string): GlossChild[] {
   const lines = source.split("\n");
   return parseLines(lines);
 }
 ```
 
 ```go
-func ParseCueMd(src string) []CueChild {
+func ParseGlossMd(src string) []GlossChild {
     return parseLines(strings.Split(src, "\n"))
 }
 ```
 
 ```sh
 go install github.com/aXisho/cuemo@latest
-cuemo README.cue.md
+cuemo README.gloss.md
 ```
 
 ---
@@ -85,17 +85,17 @@ cuemo README.cue.md
 
 ````tabs
 ```tab title="TypeScript"
-import { parseCueMdTree } from "./cue/treeParser";
+import { parseGlossMdTree } from "./gloss/treeParser";
 
-const tree = parseCueMdTree(source);
+const tree = parseGlossMdTree(source);
 ```
 
 ```tab title="Go"
-tree := cue.ParseCueMdTree(source)
+tree := gloss.ParseGlossMdTree(source)
 ```
 
 ```tab title="Python"
-tree = parse_cuemd_tree(source)
+tree = parse_gloss_md_tree(source)
 ```
 ````
 
@@ -104,20 +104,20 @@ For **syntax-highlighted code inside a tab**, use one more backtick at each encl
 `````tabs
 ````tab title="TypeScript"
 ```ts
-import { parseCueMdTree } from "./cue/treeParser";
-const tree = parseCueMdTree(source);
+import { parseGlossMdTree } from "./gloss/treeParser";
+const tree = parseGlossMdTree(source);
 ```
 ````
 
 ````tab title="Go"
 ```go
-tree := cue.ParseCueMdTree(source)
+tree := gloss.ParseGlossMdTree(source)
 ```
 ````
 
 ````tab title="Python"
 ```py
-tree = parse_cuemd_tree(source)
+tree = parse_gloss_md_tree(source)
 ```
 ````
 `````
@@ -269,7 +269,7 @@ go install github.com/aXisho/cuemo@latest
 ```
 
 ```step title="Open a file"
-cuemo README.cue.md
+cuemo README.gloss.md
 ```
 
 ```step title="Edit and save"
