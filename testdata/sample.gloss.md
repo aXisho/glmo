@@ -291,10 +291,14 @@ The browser reloads automatically on every save.
 
 ## Embed
 
-Use an `embed` block directive to embed a URL as an inline frame. YouTube, Figma, and CodePen URLs are automatically converted to their embed form.
+Use an `embed` block directive to embed a URL as an inline frame. YouTube, Figma, and CodePen URLs are automatically converted to their embed form. GitHub Gist URLs are fetched via the Gist JSON API and rendered inline.
 
 ```embed
 https://youtu.be/j7CDb610Bg0
+```
+
+```embed
+https://gist.github.com/axisho/44b2f0f1ee5573c7b8dfe2c4a0c4e2ab
 ```
 
 ---

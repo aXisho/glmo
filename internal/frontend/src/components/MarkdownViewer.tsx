@@ -21,6 +21,8 @@ import { resolveLink, resolveImageSrc, extractLanguage } from "../utils/resolve"
 import { parseFrontmatter } from "../utils/frontmatter";
 import { stripMdxSyntax } from "../utils/mdx";
 import { isMarkdownFile, detectLanguage, detectGlossFileType } from "../utils/filetype";
+import { toEmbedSrc, parseGistUrl } from "../utils/embedUrl";
+import { GistEmbed } from "./GistEmbed";
 import { GlossDocumentRenderer } from "../gloss/GlossDocumentRenderer";
 import "../gloss/styles.css";
 import type { ZoomContent } from "./ZoomModal";
@@ -529,6 +531,36 @@ function CodeBlock({ language, code }: { language: string; code: string }) {
   );
 }
 
+function EmbedBlock({ content }: { content: string }) {
+  const url = content.trim();
+  if (!/^https?:\/\//.test(url)) {
+    return (
+      <div className="gloss-embed gloss-embed-invalid">
+        <span>embed: invalid URL</span>
+      </div>
+    );
+  }
+  const gist = parseGistUrl(url);
+  if (gist) {
+    return (
+      <div className="gloss-embed">
+        <GistEmbed gistId={gist.gistId} file={gist.file} />
+      </div>
+    );
+  }
+  return (
+    <div className="gloss-embed">
+      <iframe
+        src={toEmbedSrc(url)}
+        title="Embedded content"
+        allowFullScreen
+        loading="lazy"
+        sandbox="allow-scripts allow-same-origin allow-popups allow-forms allow-presentation"
+      />
+    </div>
+  );
+}
+
 function FrontmatterBlock({ yaml }: { yaml: string }) {
   return (
     <details open className="mb-4">
@@ -688,6 +720,9 @@ export function MarkdownViewer({
         if (language) {
           if (language === "mermaid") {
             return <MermaidBlock code={code} onZoom={onZoom} />;
+          }
+          if (language === "embed") {
+            return <EmbedBlock content={code} />;
           }
           return <CodeBlock language={language} code={code} />;
         }

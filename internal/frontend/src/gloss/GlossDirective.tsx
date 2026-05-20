@@ -1,6 +1,8 @@
 import { useState, useEffect, Children, isValidElement, type ReactNode } from "react";
 import katex from "katex";
 import { SAFE_URL_PATTERN, ALLOWED_COLORS } from "./parser";
+import { toEmbedSrc, parseGistUrl } from "../utils/embedUrl";
+import { GistEmbed } from "../components/GistEmbed";
 
 // ────────────────────────────────────────────────────────────────────────────
 // Helpers
@@ -16,19 +18,6 @@ function isSafeHref(href: string | undefined): boolean {
   return SAFE_URL_PATTERN.test(href);
 }
 
-function toEmbedSrc(url: string): string | null {
-  if (!/^https?:\/\//.test(url)) return null;
-  const ytWatch = /^https?:\/\/(?:www\.)?youtube\.com\/watch\?(?:.*&)?v=([A-Za-z0-9_-]+)/.exec(url);
-  if (ytWatch) return `https://www.youtube.com/embed/${ytWatch[1]}`;
-  const ytShort = /^https?:\/\/youtu\.be\/([A-Za-z0-9_-]+)/.exec(url);
-  if (ytShort) return `https://www.youtube.com/embed/${ytShort[1]}`;
-  if (/^https?:\/\/www\.figma\.com\/(file|design|proto)\//.test(url)) {
-    return `https://www.figma.com/embed?embed_host=share&url=${encodeURIComponent(url)}`;
-  }
-  const cpPen = /^https?:\/\/codepen\.io\/([^/]+)\/pen\/([A-Za-z0-9]+)/.exec(url);
-  if (cpPen) return `https://codepen.io/${cpPen[1]}/embed/${cpPen[2]}?default-tab=result`;
-  return url;
-}
 
 function clampLevel(raw: string | undefined): number {
   const n = parseInt(raw ?? "2", 10);
@@ -240,9 +229,9 @@ export function GlossDirective({ name, attrs, children, inline = false }: GlossD
 
   switch (name) {
     case "details": {
-      const color = safeColor(attrs.color, "gray");
+      const colorClass = attrs.color ? ` gloss-color-${safeColor(attrs.color)}` : "";
       return (
-        <details className={`gloss-details gloss-color-${color}`} open={attrs.open === "true"}>
+        <details className={`gloss-details${colorClass}`} open={attrs.open === "true"}>
           <summary>{attrs.title ?? "Details"}</summary>
           {children}
         </details>
@@ -292,18 +281,18 @@ export function GlossDirective({ name, attrs, children, inline = false }: GlossD
           </div>
         );
       }
-      const src = toEmbedSrc(url);
-      if (!src) {
+      const gist = parseGistUrl(url);
+      if (gist) {
         return (
-          <div className="gloss-embed gloss-embed-link">
-            <a href={url} target="_blank" rel="noopener noreferrer">{url}</a>
+          <div className="gloss-embed">
+            <GistEmbed gistId={gist.gistId} file={gist.file} />
           </div>
         );
       }
       return (
         <div className="gloss-embed">
           <iframe
-            src={src}
+            src={toEmbedSrc(url)}
             title="Embedded content"
             allowFullScreen
             loading="lazy"
@@ -317,7 +306,7 @@ export function GlossDirective({ name, attrs, children, inline = false }: GlossD
     case "card":
       return <GlossCard title={attrs.title} href={attrs.href} color={attrs.color}>{children}</GlossCard>;
     case "grid": {
-      const color = safeColor(attrs.color, "gray");
+      const colorClass = attrs.color ? ` gloss-color-${safeColor(attrs.color)}` : "";
       const borderClass = attrs.border === "none" ? " gloss-border-none" : "";
       const cellCount = parseInt(attrs["_cell_count"] ?? "0", 10) || 0;
       const colsAttr = attrs.cols ? parseInt(attrs.cols, 10) : NaN;
@@ -331,7 +320,7 @@ export function GlossDirective({ name, attrs, children, inline = false }: GlossD
       const style: React.CSSProperties = { gridTemplateColumns: `repeat(${cols}, 1fr)` };
       if (hasRows) style.gridTemplateRows = `repeat(${rowsAttr}, auto)`;
       return (
-        <div className={`gloss-grid gloss-color-${color}${borderClass}`} style={style}>
+        <div className={`gloss-grid${colorClass}${borderClass}`} style={style}>
           {children}
         </div>
       );
