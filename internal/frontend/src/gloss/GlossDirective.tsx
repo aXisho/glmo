@@ -229,9 +229,9 @@ export function GlossDirective({ name, attrs, children, inline = false }: GlossD
 
   switch (name) {
     case "details": {
-      const color = safeColor(attrs.color, "gray");
+      const colorClass = attrs.color ? ` gloss-color-${safeColor(attrs.color)}` : "";
       return (
-        <details className={`gloss-details gloss-color-${color}`} open={attrs.open === "true"}>
+        <details className={`gloss-details${colorClass}`} open={attrs.open === "true"}>
           <summary>{attrs.title ?? "Details"}</summary>
           {children}
         </details>
@@ -306,7 +306,7 @@ export function GlossDirective({ name, attrs, children, inline = false }: GlossD
     case "card":
       return <GlossCard title={attrs.title} href={attrs.href} color={attrs.color}>{children}</GlossCard>;
     case "grid": {
-      const color = safeColor(attrs.color, "gray");
+      const colorClass = attrs.color ? ` gloss-color-${safeColor(attrs.color)}` : "";
       const borderClass = attrs.border === "none" ? " gloss-border-none" : "";
       const cellCount = parseInt(attrs["_cell_count"] ?? "0", 10) || 0;
       const colsAttr = attrs.cols ? parseInt(attrs.cols, 10) : NaN;
@@ -320,7 +320,7 @@ export function GlossDirective({ name, attrs, children, inline = false }: GlossD
       const style: React.CSSProperties = { gridTemplateColumns: `repeat(${cols}, 1fr)` };
       if (hasRows) style.gridTemplateRows = `repeat(${rowsAttr}, auto)`;
       return (
-        <div className={`gloss-grid gloss-color-${color}${borderClass}`} style={style}>
+        <div className={`gloss-grid${colorClass}${borderClass}`} style={style}>
           {children}
         </div>
       );
