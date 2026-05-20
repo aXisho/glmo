@@ -21,6 +21,7 @@ import { resolveLink, resolveImageSrc, extractLanguage } from "../utils/resolve"
 import { parseFrontmatter } from "../utils/frontmatter";
 import { stripMdxSyntax } from "../utils/mdx";
 import { isMarkdownFile, detectLanguage, detectGlossFileType } from "../utils/filetype";
+import { toEmbedSrc, parseGistUrl } from "../utils/embedUrl";
 import { GistEmbed } from "./GistEmbed";
 import { GlossDocumentRenderer } from "../gloss/GlossDocumentRenderer";
 import "../gloss/styles.css";
@@ -530,21 +531,33 @@ function CodeBlock({ language, code }: { language: string; code: string }) {
   );
 }
 
-const GIST_URL_RE = /^https:\/\/gist\.github\.com\/([^/]+\/[^/?#\s]+)(\?[^\s]*)?$/;
-
 function EmbedBlock({ content }: { content: string }) {
   const url = content.trim();
-  const match = url.match(GIST_URL_RE);
-  if (match) {
-    const gistId = match[1];
-    const file = match[2] ? new URLSearchParams(match[2].slice(1)).get("file") ?? undefined : undefined;
-    return <GistEmbed gistId={gistId} file={file} />;
+  if (!/^https?:\/\//.test(url)) {
+    return (
+      <div className="gloss-embed gloss-embed-invalid">
+        <span>embed: invalid URL</span>
+      </div>
+    );
   }
-  // Unknown embed URL — fall back to a plain link
+  const gist = parseGistUrl(url);
+  if (gist) {
+    return (
+      <div className="gloss-embed">
+        <GistEmbed gistId={gist.gistId} file={gist.file} />
+      </div>
+    );
+  }
   return (
-    <a href={url} target="_blank" rel="noopener noreferrer" className="text-gh-text-link">
-      {url}
-    </a>
+    <div className="gloss-embed">
+      <iframe
+        src={toEmbedSrc(url)}
+        title="Embedded content"
+        allowFullScreen
+        loading="lazy"
+        sandbox="allow-scripts allow-same-origin allow-popups allow-forms allow-presentation"
+      />
+    </div>
   );
 }
 
