@@ -1,6 +1,6 @@
-# cuemo
+# glmo
 
-`cuemo` is a **Gloss** Markdown viewer that opens `.md` and `.gloss.md` files in a browser.
+`glmo` is a **Gloss** Markdown viewer that opens `.md` and `.gloss.md` files in a browser.
 
 A fork of [k1LoW/mo](https://github.com/k1LoW/mo) with [Gloss Markdown](https://github.com/aXisho/glossmd) support added.
 
@@ -28,61 +28,61 @@ A fork of [k1LoW/mo](https://github.com/k1LoW/mo) with [Gloss Markdown](https://
 - <img src="images/icons/restart.svg" width="16" height="16" alt="restart"> Server restart with session preservation
 - Auto session backup and restore
 - Drag-and-drop file addition from the OS file manager (content is loaded in-memory; live-reload is not supported for dropped files)
-- Stdin pipe support (`cat file.gloss.md | cuemo`)
+- Stdin pipe support (`cat file.gloss.md | glmo`)
 - Live-reload on save (for files opened via CLI)
 
 ## Install
 
 **manually:**
 
-Download binary from [releases page](https://github.com/aXisho/cuemo/releases) or build from source (see below).
+Download binary from [releases page](https://github.com/aXisho/glmo/releases) or build from source (see below).
 
 ## Usage
 
 ``` console
-$ cuemo README.md                          # Open a single file
-$ cuemo README.md CHANGELOG.md docs/*.md   # Open multiple files
-$ cuemo docs/                              # Open all .md / .gloss.md files in a directory
-$ cuemo spec.gloss.md --target design      # Open a Gloss Markdown file in a named group
-$ cat notes.gloss.md | cuemo               # Read from stdin
+$ glmo README.md                          # Open a single file
+$ glmo README.md CHANGELOG.md docs/*.md   # Open multiple files
+$ glmo docs/                              # Open all .md / .gloss.md files in a directory
+$ glmo spec.gloss.md --target design      # Open a Gloss Markdown file in a named group
+$ cat notes.gloss.md | glmo               # Read from stdin
 ```
 
-`cuemo` opens Markdown and Gloss Markdown files in a browser with live-reload. When you save a file, the browser automatically reflects the changes. `.gloss.md` files are rendered with Gloss Markdown directives (callouts, tabs, badges, etc.).
+`glmo` opens Markdown and Gloss Markdown files in a browser with live-reload. When you save a file, the browser automatically reflects the changes. `.gloss.md` files are rendered with Gloss Markdown directives (callouts, tabs, badges, etc.).
 
 ### Gloss Markdown files
 
 `.gloss.md` files are automatically detected and rendered with Gloss Markdown support:
 
 ``` console
-$ cuemo spec.gloss.md          # Renders Gloss Markdown directives
-$ cuemo -w '**/*.gloss.md'     # Watch all .gloss.md files
+$ glmo spec.gloss.md          # Renders Gloss Markdown directives
+$ glmo -w '**/*.gloss.md'     # Watch all .gloss.md files
 ```
 
 ### Reading from stdin
 
-When no positional arguments are given and stdin is redirected (not a terminal), `cuemo` reads Markdown content from stdin.
+When no positional arguments are given and stdin is redirected (not a terminal), `glmo` reads Markdown content from stdin.
 
 ``` console
-$ cat notes.md | cuemo
-$ some-command | cuemo --target output
-$ cuemo < notes.gloss.md
+$ cat notes.md | glmo
+$ some-command | glmo --target output
+$ glmo < notes.gloss.md
 ```
 
 The content is loaded in-memory with a generated name (`stdin-<hash>.md`). Piping the same content again reuses the existing entry (deduplicated by content hash).
 
 ### Single server, multiple files
 
-By default, `cuemo` runs a single server on port `6275`. If a server is already running on the same port, subsequent `cuemo` invocations add files to the existing session instead of starting a new one.
+By default, `glmo` runs a single server on port `6275`. If a server is already running on the same port, subsequent `glmo` invocations add files to the existing session instead of starting a new one.
 
 ``` console
-$ cuemo README.md          # Starts a cuemo server in the background
-$ cuemo CHANGELOG.md       # Adds the file to the running cuemo server
+$ glmo README.md          # Starts a glmo server in the background
+$ glmo CHANGELOG.md       # Adds the file to the running glmo server
 ```
 
 To run a completely separate session, use a different port:
 
 ``` console
-$ cuemo draft.md -p 6276
+$ glmo draft.md -p 6276
 ```
 
 ![Multiple files with sidebar](images/multiple-files.png)
@@ -92,9 +92,9 @@ $ cuemo draft.md -p 6276
 Files can be organized into named groups using the `--target` (`-t`) flag. Each group gets its own URL path and sidebar.
 
 ``` console
-$ cuemo spec.md --target design      # Opens at http://localhost:6275/design
-$ cuemo api.md --target design       # Adds to the "design" group
-$ cuemo notes.md --target notes      # Opens at http://localhost:6275/notes
+$ glmo spec.md --target design      # Opens at http://localhost:6275/design
+$ glmo api.md --target design       # Adds to the "design" group
+$ glmo notes.md --target notes      # Opens at http://localhost:6275/notes
 ```
 
 ![Group view](images/groups.png)
@@ -104,26 +104,26 @@ $ cuemo notes.md --target notes      # Opens at http://localhost:6275/notes
 `--watch` (`-w`) turns on watch mode. Directory and glob positional arguments are registered as watch patterns, matching files are opened, and new matching files are picked up automatically.
 
 ``` console
-$ cuemo -w '**/*.md'                              # Watch and open all .md files recursively
-$ cuemo -w '**/*.gloss.md'                        # Watch all .gloss.md files
-$ cuemo -w 'docs/**/*.md' --target docs           # Watch docs/ tree in "docs" group
-$ cuemo -w '*.md' 'docs/**/*.md'                  # Multiple patterns (positional)
-$ cuemo -w docs/                                  # Watch docs/*.md
+$ glmo -w '**/*.md'                              # Watch and open all .md files recursively
+$ glmo -w '**/*.gloss.md'                        # Watch all .gloss.md files
+$ glmo -w 'docs/**/*.md' --target docs           # Watch docs/ tree in "docs" group
+$ glmo -w '*.md' 'docs/**/*.md'                  # Multiple patterns (positional)
+$ glmo -w docs/                                  # Watch docs/*.md
 ```
 
 Combine with `--recursive` (`-R`) to descend into subdirectories. Short flags can be combined:
 
 ``` console
-$ cuemo -w -R docs/                               # Watch docs/**/*.md
-$ cuemo -wR docs/                                 # Same, short-combined
+$ glmo -w -R docs/                               # Watch docs/**/*.md
+$ glmo -wR docs/                                 # Same, short-combined
 ```
 
 Without `--watch`, globs are expanded once and directory arguments open matching files without live-watching new additions:
 
 ``` console
-$ cuemo docs/                                     # Open every .md directly in docs/
-$ cuemo -R docs/                                  # Open every .md under docs/ (recursive)
-$ cuemo 'docs/*.md'                               # Expand and open matching .md files
+$ glmo docs/                                     # Open every .md directly in docs/
+$ glmo -R docs/                                  # Open every .md under docs/ (recursive)
+$ glmo 'docs/*.md'                               # Expand and open matching .md files
 ```
 
 #### Removing watch patterns
@@ -131,15 +131,15 @@ $ cuemo 'docs/*.md'                               # Expand and open matching .md
 `--unwatch` removes previously registered patterns. Pass glob patterns or directories as positional arguments to specify which patterns to remove. Regular file paths are not accepted (use `--close` to remove individual files from the sidebar). Files already added by a pattern remain in the sidebar.
 
 ``` console
-$ cuemo --unwatch '**/*.md'                              # Stop watching a pattern (default group)
-$ cuemo --unwatch docs/                                  # Stop watching docs/*.md
-$ cuemo --unwatch 'docs/**/*.md' --target docs            # Stop watching in a specific group
+$ glmo --unwatch '**/*.md'                              # Stop watching a pattern (default group)
+$ glmo --unwatch docs/                                  # Stop watching docs/*.md
+$ glmo --unwatch 'docs/**/*.md' --target docs            # Stop watching in a specific group
 ```
 
 With `-R`, a directory argument removes **all** registered patterns under that directory at once. For example, if `docs/*.md`, `docs/sub/*.md`, and `docs/**/*.md` are all registered, a single command removes them all:
 
 ``` console
-$ cuemo --unwatch -R docs/                               # Removes docs/*.md, docs/sub/*.md, docs/**/*.md, etc.
+$ glmo --unwatch -R docs/                               # Removes docs/*.md, docs/sub/*.md, docs/**/*.md, etc.
 ```
 
 Patterns are resolved to absolute paths before matching, so you can specify either a relative glob or the full path shown by `--status`.
@@ -154,62 +154,62 @@ The sidebar supports flat and tree view modes. Flat view shows file names only, 
 
 ### Starting and stopping
 
-`cuemo` runs in the background by default — the command returns immediately, leaving the shell free for other work. This makes it easy to incorporate into scripts, tool chains, or LLM-driven workflows.
+`glmo` runs in the background by default — the command returns immediately, leaving the shell free for other work. This makes it easy to incorporate into scripts, tool chains, or LLM-driven workflows.
 
 ``` console
-$ cuemo README.md
-cuemo: serving at http://localhost:6275 (pid 12345)
+$ glmo README.md
+glmo: serving at http://localhost:6275 (pid 12345)
 $ # shell is available immediately
 ```
 
-Use `--status` to check all running cuemo servers, and `--shutdown` to stop one:
+Use `--status` to check all running glmo servers, and `--shutdown` to stop one:
 
 ``` console
-$ cuemo --status              # Show all running cuemo servers
+$ glmo --status              # Show all running glmo servers
 http://localhost:6275 (pid 12345, v0.1.0)
   default: 5 file(s)
     watching: /Users/you/project/src/**/*.md, /Users/you/project/*.md
   docs: 2 file(s)
     watching: /Users/you/project/docs/**/*.md
 
-$ cuemo --shutdown            # Shut down the cuemo server on the default port
-$ cuemo --shutdown -p 6276    # Shut down the cuemo server on a specific port
-$ cuemo --restart             # Restart the cuemo server on the default port
+$ glmo --shutdown            # Shut down the glmo server on the default port
+$ glmo --shutdown -p 6276    # Shut down the glmo server on a specific port
+$ glmo --restart             # Restart the glmo server on the default port
 ```
 
-If you need the cuemo server to run in the foreground (e.g. for debugging), use `--foreground`:
+If you need the glmo server to run in the foreground (e.g. for debugging), use `--foreground`:
 
 ``` console
-$ cuemo --foreground README.md
+$ glmo --foreground README.md
 ```
 
 ### Server restart
 
-Click the <img src="images/icons/restart.svg" width="16" height="16" alt="restart"> restart button (bottom-right corner) or run `cuemo --restart` to restart the `cuemo` server process. The current session — all open files and groups — is preserved across the restart.
+Click the <img src="images/icons/restart.svg" width="16" height="16" alt="restart"> restart button (bottom-right corner) or run `glmo --restart` to restart the `glmo` server process. The current session — all open files and groups — is preserved across the restart.
 
 ### Session backup and restore
 
-`cuemo` automatically saves session state (open files and watch patterns per group) when files are added or removed. When starting a new server, the previous session is automatically restored and merged with any files specified on the command line.
+`glmo` automatically saves session state (open files and watch patterns per group) when files are added or removed. When starting a new server, the previous session is automatically restored and merged with any files specified on the command line.
 
 ``` console
-$ cuemo README.md CHANGELOG.md       # Start with two files
-$ cuemo --shutdown                   # Shut down the server
-$ cuemo                              # Restores README.md and CHANGELOG.md
-$ cuemo TODO.md                      # Restores previous session + adds TODO.md
+$ glmo README.md CHANGELOG.md       # Start with two files
+$ glmo --shutdown                   # Shut down the server
+$ glmo                              # Restores README.md and CHANGELOG.md
+$ glmo TODO.md                      # Restores previous session + adds TODO.md
 ```
 
 Use `--close` to remove specific files from the running server:
 
 ``` console
-$ cuemo --close README.md            # Close a file from the default group
-$ cuemo --close docs/*.md -t docs    # Close files from the "docs" group
+$ glmo --close README.md            # Close a file from the default group
+$ glmo --close docs/*.md -t docs    # Close files from the "docs" group
 ```
 
 Use `--clear` to remove a saved session. If a server is running, it is automatically restarted with an empty state:
 
 ``` console
-$ cuemo --clear                      # Clear saved session for the default port
-$ cuemo --clear -p 6276              # Clear saved session for a specific port
+$ glmo --clear                      # Clear saved session for the default port
+$ glmo --clear -p 6276              # Clear saved session for a specific port
 ```
 
 ### JSON output
@@ -217,7 +217,7 @@ $ cuemo --clear -p 6276              # Clear saved session for a specific port
 Use `--json` to get structured JSON output on stdout, useful for scripting and integration with other tools.
 
 ``` console
-$ cuemo --json README.md
+$ glmo --json README.md
 {
   "url": "http://localhost:6275",
   "files": [
@@ -233,7 +233,7 @@ $ cuemo --json README.md
 `--status` also supports `--json`:
 
 ``` console
-$ cuemo --status --json
+$ glmo --status --json
 [
   {
     "url": "http://localhost:6275",
@@ -261,20 +261,20 @@ $ cuemo --status --json
 | `--bind` | `-b` | `localhost` | Bind address (e.g. `0.0.0.0`) |
 | `--open` | | | Always open browser |
 | `--no-open` | | | Never open browser |
-| `--status` | | | Show all running cuemo servers |
+| `--status` | | | Show all running glmo servers |
 | `--watch` | `-w` | `false` | Treat directory and glob arguments as watch patterns |
 | `--unwatch` | | `false` | Remove watched patterns for the given directory or glob arguments |
 | `--recursive` | `-R` | `false` | Recurse into subdirectories when a directory is given |
 | `--close` | | | Close files instead of opening them |
-| `--shutdown` | | | Shut down the running cuemo server |
-| `--restart` | | | Restart the running cuemo server |
+| `--shutdown` | | | Shut down the running glmo server |
+| `--restart` | | | Restart the running glmo server |
 | `--clear` | | | Clear saved session (restarts server if running) |
-| `--foreground` | | | Run cuemo server in foreground |
+| `--foreground` | | | Run glmo server in foreground |
 | `--json` | | | Output structured data as JSON to stdout |
 | `--dangerously-allow-remote-access` | | | Allow remote access without authentication (trusted networks only) |
 
 > [!WARNING]
-> Binding to a non-localhost address exposes cuemo to the network **without any authentication**. Remote clients can read any file accessible by the user, browse the filesystem via glob patterns, and shut down the server. A confirmation prompt is shown when `--bind` is set to a non-loopback address.
+> Binding to a non-localhost address exposes glmo to the network **without any authentication**. Remote clients can read any file accessible by the user, browse the filesystem via glob patterns, and shut down the server. A confirmation prompt is shown when `--bind` is set to a non-loopback address.
 
 ## Build
 
@@ -284,10 +284,10 @@ Requires Go 1.26+ and [pnpm](https://pnpm.io/).
 $ make build
 ```
 
-The resulting binary is named `cuemo`. To rename the binary during build:
+The resulting binary is named `glmo`. To rename the binary during build:
 
 ``` console
-$ go build -o cuemo .
+$ go build -o glmo .
 ```
 
 ## References

@@ -68,68 +68,68 @@ var (
 )
 
 var rootCmd = &cobra.Command{
-	Use:   "mo [flags] [FILE|DIR ...]",
-	Short: "mo is a Markdown viewer that opens .md files in a browser.",
-	Long: `mo is a Markdown viewer that opens .md files in a browser with live-reload.
+	Use:   "glmo [flags] [FILE|DIR ...]",
+	Short: "glmo is a Gloss Markdown viewer that opens .md and .gloss.md files in a browser.",
+	Long: `glmo is a Markdown viewer that opens .md files in a browser with live-reload.
 
 It runs in the background, serving Markdown files using a built-in React SPA,
 and automatically refreshes the browser when files are saved.
 
 Examples:
-  mo README.md                          Open a single file
-  mo README.md CHANGELOG.md docs/*.md   Open multiple files
-  mo spec.md --target design            Open in a named group
-  mo draft.md --port 6276               Use a different port
-  cat notes.md | mo                     Read Markdown from stdin
-  cmd | mo --target output              Pipe command output into a group
+  glmo README.md                          Open a single file
+  glmo README.md CHANGELOG.md docs/*.md   Open multiple files
+  glmo spec.md --target design            Open in a named group
+  glmo draft.md --port 6276               Use a different port
+  cat notes.md | glmo                     Read Markdown from stdin
+  cmd | glmo --target output              Pipe command output into a group
 
 Single Server, Multiple Files:
-  By default, mo runs a single server on port 6275.
-  If a mo server is already running on the same port, subsequent mo
+  By default, glmo runs a single server on port 6275.
+  If a glmo server is already running on the same port, subsequent glmo
   invocations add files to the existing session instead of starting a new one.
 
-  $ mo README.md          # Starts a mo server in the background
-  $ mo CHANGELOG.md       # Adds the file to the running mo server
+  $ glmo README.md          # Starts a glmo server in the background
+  $ glmo CHANGELOG.md       # Adds the file to the running glmo server
 
   To run a completely separate session, use a different port:
 
-  $ mo draft.md -p 6276
+  $ glmo draft.md -p 6276
 
 Groups:
   Files can be organized into named groups using the --target (-t) flag.
   Each group gets its own URL path (e.g., http://localhost:6275/design)
   and its own sidebar in the browser.
 
-  $ mo spec.md --target design      # Opens at /design
-  $ mo api.md --target design       # Adds to the "design" group
-  $ mo notes.md --target notes      # Opens at /notes
+  $ glmo spec.md --target design      # Opens at /design
+  $ glmo api.md --target design       # Adds to the "design" group
+  $ glmo notes.md --target notes      # Opens at /notes
 
   If no --target is specified, files are added to the "default" group.
 
 Starting and Stopping:
-  mo runs in the background by default. The command returns
+  glmo runs in the background by default. The command returns
   immediately, leaving the shell free for other work.
 
-  $ mo README.md            # Starts mo in the background
-  $ mo --status             # Shows all running mo servers
-  $ mo --shutdown           # Shuts it down
-  $ mo --restart            # Restarts it (preserving session)
+  $ glmo README.md            # Starts glmo in the background
+  $ glmo --status             # Shows all running glmo servers
+  $ glmo --shutdown           # Shuts it down
+  $ glmo --restart            # Restarts it (preserving session)
 
-  Use --foreground to keep the mo server in the foreground.
+  Use --foreground to keep the glmo server in the foreground.
 
 Session Restore:
-  mo automatically saves session state. When starting a new server,
+  glmo automatically saves session state. When starting a new server,
   the previous session is restored and merged with any specified files.
 
-  $ mo README.md CHANGELOG.md    # Start with two files
-  $ mo --shutdown                # Shut down the server
-  $ mo                           # Restores README.md and CHANGELOG.md
-  $ mo TODO.md                   # Restores previous session + adds TODO.md
+  $ glmo README.md CHANGELOG.md    # Start with two files
+  $ glmo --shutdown                # Shut down the server
+  $ glmo                           # Restores README.md and CHANGELOG.md
+  $ glmo TODO.md                   # Restores previous session + adds TODO.md
 
   Use --clear to remove a saved session.
 
 Live-Reload:
-  mo watches all opened files for changes using filesystem notifications.
+  glmo watches all opened files for changes using filesystem notifications.
   When a file is saved, the browser automatically re-renders the content.
 
 Supported Markdown Features:
@@ -149,23 +149,23 @@ Watch mode and glob patterns:
   opened and new files are picked up automatically. Combine with
   --recursive (-R) to descend into subdirectories.
 
-  $ mo -w '**/*.md'                   Watch all .md files recursively
-  $ mo -w 'docs/**/*.md' -t docs      Watch docs/ tree in "docs" group
-  $ mo -w '*.md' 'docs/**/*.md'       Multiple patterns (positional)
-  $ mo -w docs/                       Watch docs/*.md
-  $ mo -w -R docs/                    Watch docs/**/*.md
-  $ mo -wR docs/                      Same (short-combined form)
-  $ mo --unwatch '**/*.md'            Stop watching a pattern
-  $ mo --unwatch docs/                Stop watching docs/*.md
-  $ mo --unwatch -R docs/             Stop watching all patterns under docs/
+  $ glmo -w '**/*.md'                   Watch all .md files recursively
+  $ glmo -w 'docs/**/*.md' -t docs      Watch docs/ tree in "docs" group
+  $ glmo -w '*.md' 'docs/**/*.md'       Multiple patterns (positional)
+  $ glmo -w docs/                       Watch docs/*.md
+  $ glmo -w -R docs/                    Watch docs/**/*.md
+  $ glmo -wR docs/                      Same (short-combined form)
+  $ glmo --unwatch '**/*.md'            Stop watching a pattern
+  $ glmo --unwatch docs/                Stop watching docs/*.md
+  $ glmo --unwatch -R docs/             Stop watching all patterns under docs/
 
   Without --watch, globs are expanded once and a directory argument
   opens the matching files without live-watching new additions.
 
-  $ mo -R docs/                       Open every .md under docs/ once
+  $ glmo -R docs/                       Open every .md under docs/ once
 
 WARNING: --bind with a non-loopback address:
-  Binding to a non-localhost address (e.g. 0.0.0.0) exposes mo to the
+  Binding to a non-localhost address (e.g. 0.0.0.0) exposes glmo to the
   network without any authentication. Remote clients can read any file
   accessible by this user, browse the filesystem via glob patterns, and
   shut down the server. A confirmation prompt is shown before starting.`,
@@ -187,13 +187,13 @@ func init() {
 	rootCmd.Flags().BoolVar(&open, "open", false, "Always open browser (even when adding to existing group)")
 	rootCmd.Flags().BoolVar(&noOpen, "no-open", false, "Do not open browser automatically")
 	rootCmd.MarkFlagsMutuallyExclusive("open", "no-open")
-	rootCmd.Flags().BoolVar(&shutdownServer, "shutdown", false, "Shut down the running mo server on the specified port")
-	rootCmd.Flags().BoolVar(&restartServer, "restart", false, "Restart the running mo server on the specified port")
+	rootCmd.Flags().BoolVar(&shutdownServer, "shutdown", false, "Shut down the running glmo server on the specified port")
+	rootCmd.Flags().BoolVar(&restartServer, "restart", false, "Restart the running glmo server on the specified port")
 	rootCmd.MarkFlagsMutuallyExclusive("shutdown", "restart")
 	rootCmd.Flags().StringVar(&restore, "restore", "", "Restore state from file (internal use)")
 	rootCmd.Flags().MarkHidden("restore") //nolint:errcheck
-	rootCmd.Flags().BoolVar(&foreground, "foreground", false, "Run mo server in foreground (do not background)")
-	rootCmd.Flags().BoolVar(&statusServer, "status", false, "Show status of all running mo servers")
+	rootCmd.Flags().BoolVar(&foreground, "foreground", false, "Run glmo server in foreground (do not background)")
+	rootCmd.Flags().BoolVar(&statusServer, "status", false, "Show status of all running glmo servers")
 	rootCmd.Flags().BoolVarP(&watchMode, "watch", "w", false, "Treat directory and glob arguments as watch patterns")
 	rootCmd.Flags().BoolVar(&unwatchMode, "unwatch", false, "Remove watched patterns for the given directory or glob arguments")
 	rootCmd.Flags().BoolVarP(&recursive, "recursive", "R", false, "Recurse into subdirectories when a directory is given")
