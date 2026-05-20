@@ -21,7 +21,6 @@ import { resolveLink, resolveImageSrc, extractLanguage } from "../utils/resolve"
 import { parseFrontmatter } from "../utils/frontmatter";
 import { stripMdxSyntax } from "../utils/mdx";
 import { isMarkdownFile, detectLanguage, detectGlossFileType } from "../utils/filetype";
-import { rehypeGistEmbed } from "../utils/rehypeGistEmbed";
 import { GistEmbed } from "./GistEmbed";
 import { GlossDocumentRenderer } from "../gloss/GlossDocumentRenderer";
 import "../gloss/styles.css";
@@ -62,7 +61,7 @@ const sanitizeSchema = {
   attributes: {
     ...defaultSchema.attributes,
     span: [...(defaultSchema.attributes?.["span"] || []), "style"],
-    div: [...(defaultSchema.attributes?.["div"] || []), "style", "align", "data-gist-id", "data-gist-file"],
+    div: [...(defaultSchema.attributes?.["div"] || []), "style", "align"],
   },
 };
 
@@ -531,6 +530,24 @@ function CodeBlock({ language, code }: { language: string; code: string }) {
   );
 }
 
+const GIST_URL_RE = /^https:\/\/gist\.github\.com\/([^/]+\/[^/?#\s]+)(\?[^\s]*)?$/;
+
+function EmbedBlock({ content }: { content: string }) {
+  const url = content.trim();
+  const match = url.match(GIST_URL_RE);
+  if (match) {
+    const gistId = match[1];
+    const file = match[2] ? new URLSearchParams(match[2].slice(1)).get("file") ?? undefined : undefined;
+    return <GistEmbed gistId={gistId} file={file} />;
+  }
+  // Unknown embed URL — fall back to a plain link
+  return (
+    <a href={url} target="_blank" rel="noopener noreferrer" className="text-gh-text-link">
+      {url}
+    </a>
+  );
+}
+
 function FrontmatterBlock({ yaml }: { yaml: string }) {
   return (
     <details open className="mb-4">
@@ -691,6 +708,9 @@ export function MarkdownViewer({
           if (language === "mermaid") {
             return <MermaidBlock code={code} onZoom={onZoom} />;
           }
+          if (language === "embed") {
+            return <EmbedBlock content={code} />;
+          }
           return <CodeBlock language={language} code={code} />;
         }
         if (isBlock) {
@@ -718,14 +738,7 @@ export function MarkdownViewer({
         }
         return <img src={resolveImageSrc(src, activeGroup, fileId)} alt={alt} {...props} />;
       },
-      div: ({ node: _node, ...props }) => {
-        const gistId = props["data-gist-id" as keyof typeof props] as string | undefined;
-        const gistFile = props["data-gist-file" as keyof typeof props] as string | undefined;
-        if (gistId) {
-          return <GistEmbed gistId={gistId} file={gistFile} />;
-        }
-        return <div {...props} />;
-      },
+      div: ({ node: _node, ...props }) => <div {...props} />,
       span: ({ node: _node, ...props }) => <span {...props} />,
       a: ({ href, children, ...props }) => {
         const resolved = resolveLink(href, activeGroup, fileId);
@@ -811,7 +824,6 @@ export function MarkdownViewer({
           remarkPlugins={[remarkGfm, remarkMath]}
           rehypePlugins={[
             rehypeRaw,
-            rehypeGistEmbed,
             rehypeStripClobberPrefix,
             [rehypeSanitize, sanitizeSchema],
             rehypeGithubAlerts,
