@@ -21,10 +21,11 @@ import { resolveLink, resolveImageSrc, extractLanguage } from "../utils/resolve"
 import { parseFrontmatter } from "../utils/frontmatter";
 import { stripMdxSyntax } from "../utils/mdx";
 import { isMarkdownFile, detectLanguage, detectGlossFileType } from "../utils/filetype";
-import { toEmbedSrc, parseGistUrl } from "../utils/embedUrl";
-import { GistEmbed } from "./GistEmbed";
+import { scrollToAndHighlightHashTarget, clearTransientTargets } from "../utils/hashScroll";
+import { EmbedBlock } from "./EmbedBlock";
 import { GlossDocumentRenderer } from "../gloss/GlossDocumentRenderer";
 import "../gloss/styles.css";
+import "../styles/moTarget.css";
 import type { ZoomContent } from "./ZoomModal";
 import type { TocHeading } from "./TocPanel";
 import type { Components } from "react-markdown";
@@ -92,61 +93,6 @@ interface SearchHitMarker {
 }
 
 const SEARCH_HIT_COLUMN_OFFSET = -24;
-const TRANSIENT_TARGET_CLASS = "mo-target";
-
-function getHashTarget(href: string | undefined): HTMLElement | null {
-  if (!href?.startsWith("#")) {
-    return null;
-  }
-  const rawId = href.slice(1);
-  if (!rawId) {
-    return null;
-  }
-  const ids = [rawId];
-  try {
-    const decoded = decodeURIComponent(rawId);
-    if (decoded !== rawId) {
-      ids.push(decoded);
-    }
-  } catch {
-    // Keep the raw id when the fragment is not valid URI-encoded text.
-  }
-  for (const id of ids) {
-    const target = document.getElementById(id);
-    if (target) {
-      return target;
-    }
-  }
-  return null;
-}
-
-function clearTransientTargets() {
-  document
-    .querySelectorAll(`.${TRANSIENT_TARGET_CLASS}`)
-    .forEach((el) => el.classList.remove(TRANSIENT_TARGET_CLASS));
-
-  // github-markdown-css highlights footnotes with `li:target`. If a previous
-  // native hash navigation created that state, remove only footnote hashes when
-  // the user clicks elsewhere.
-  if (window.location.hash && document.querySelector(".markdown-body .footnotes li:target")) {
-    window.history.replaceState(window.history.state, "", window.location.pathname + window.location.search);
-  }
-}
-
-function scrollToAndHighlightHashTarget(href: string | undefined): boolean {
-  const target = getHashTarget(href);
-  if (!target) {
-    return false;
-  }
-  const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  target.scrollIntoView({
-    behavior: reduced ? "auto" : "smooth",
-    block: "start",
-  });
-  clearTransientTargets();
-  target.classList.add(TRANSIENT_TARGET_CLASS);
-  return true;
-}
 
 function collectSearchHitMarkers(root: HTMLElement, query: string): SearchHitMarker[] {
   const trimmed = query.trim();
@@ -527,36 +473,6 @@ function CodeBlock({ language, code }: { language: string; code: string }) {
         <code>{code}</code>
       </pre>
       <CodeBlockCopyButton code={code} />
-    </div>
-  );
-}
-
-function EmbedBlock({ content }: { content: string }) {
-  const url = content.trim();
-  if (!/^https?:\/\//.test(url)) {
-    return (
-      <div className="gloss-embed gloss-embed-invalid">
-        <span>embed: invalid URL</span>
-      </div>
-    );
-  }
-  const gist = parseGistUrl(url);
-  if (gist) {
-    return (
-      <div className="gloss-embed">
-        <GistEmbed gistId={gist.gistId} file={gist.file} />
-      </div>
-    );
-  }
-  return (
-    <div className="gloss-embed">
-      <iframe
-        src={toEmbedSrc(url)}
-        title="Embedded content"
-        allowFullScreen
-        loading="lazy"
-        sandbox="allow-scripts allow-same-origin allow-popups allow-forms allow-presentation"
-      />
     </div>
   );
 }
