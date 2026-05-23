@@ -99,6 +99,7 @@ h4.gloss-heading, h5.gloss-heading, h6.gloss-heading {
 .gloss-cell > *:last-child { margin-bottom: 0; }
 
 /* Grid colour: tint the divider lines. */
+.gloss-grid.gloss-color-gray   { background: var(--gloss-gray, #8c959f); }
 .gloss-grid.gloss-color-blue   { background: var(--gloss-blue, #0969da); }
 .gloss-grid.gloss-color-green  { background: var(--gloss-green, #1a7f37); }
 .gloss-grid.gloss-color-yellow { background: var(--gloss-yellow, #9a6700); }
