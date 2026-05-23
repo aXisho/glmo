@@ -1,5 +1,17 @@
 # Changelog
 
+## [v1.5.5](https://github.com/aXisho/glmo/commits/v1.5.5) - 2026-05-23
+### Other Changes
+- feat: add CueMD renderer for .cuemd and .cue.md files by @aXisho in https://github.com/aXisho/glmo/pull/1
+- feat: sync with glossmd spec — rename Cue Markdown to Gloss Markdown by @aXisho in https://github.com/aXisho/glmo/pull/2
+- feat(gloss): implement embed directive, filename syntax, heading indent, strict callout parsing by @aXisho in https://github.com/aXisho/glmo/pull/3
+- feat(frontend): optimize line-height for readability across all font sizes by @aXisho in https://github.com/aXisho/glmo/pull/4
+- Add GitHub Gist embed support by @aXisho in https://github.com/aXisho/glmo/pull/5
+- refactor: extract hash scroll utils, EmbedBlock, and footnote CSS to reduce diff vs upstream mo by @aXisho in https://github.com/aXisho/glmo/pull/6
+- Upgrade dependencies and GoReleaser action by @aXisho in https://github.com/aXisho/glmo/pull/7
+- Update sample.gloss.md by @aXisho in https://github.com/aXisho/glmo/pull/8
+- Add inline directives section to sample gloss by @aXisho in https://github.com/aXisho/glmo/pull/9
+
 ## [v1.5.5](https://github.com/k1LoW/mo/compare/v1.5.4...v1.5.5) - 2026-05-11
 ### Dependency Updates ⬆️
 - chore(deps): bump mermaid from 11.14.0 to 11.15.0 in /internal/frontend by @dependabot[bot] in https://github.com/k1LoW/mo/pull/210
