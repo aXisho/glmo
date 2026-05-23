@@ -40,10 +40,13 @@ Pick any allowed colour: `gray`, `blue`, `green`, `yellow`, `red`, `purple`.
 The `indent` attribute shifts a heading right, useful for expressing hierarchy without changing the heading level.
 
 ## `Top-level`{heading color=blue}
+test
 
 ## `One level in`{heading color=blue indent=1}
+test
 
 ## `Two levels in`{heading color=blue indent=2}
+test
 
 ---
 
