@@ -1,6 +1,6 @@
 import { useState, useEffect, Children, isValidElement, type ReactNode } from "react";
 import katex from "katex";
-import { SAFE_URL_PATTERN, ALLOWED_COLORS } from "./parser";
+import { SAFE_URL_PATTERN, ALLOWED_COLORS, validColor } from "./parser";
 import { toEmbedSrc, parseGistUrl } from "../utils/embedUrl";
 import { GistEmbed } from "../components/GistEmbed";
 
@@ -107,21 +107,24 @@ function TabsUI({ tabs, color }: { tabs: TabItem[]; color?: string }) {
   const [activeIndex, setActiveIndex] = useState(0);
   if (tabs.length === 0) return null;
   const safeIndex = Math.min(activeIndex, tabs.length - 1);
-  const parentColor = safeColor(color, "blue");
+  const parentValidColor = validColor(color);
   return (
-    <div className={`gloss-tabs gloss-color-${parentColor}`}>
+    <div className={`gloss-tabs${parentValidColor ? ` gloss-color-${parentValidColor}` : ""}`}>
       <div className="gloss-tabs-bar" role="tablist">
-        {tabs.map((tab, idx) => (
-          <button
-            key={idx}
-            role="tab"
-            aria-selected={idx === safeIndex}
-            className={`gloss-tabs-btn gloss-color-${safeColor(tab.color, parentColor)}${idx === safeIndex ? " active" : ""}`}
-            onClick={() => setActiveIndex(idx)}
-          >
-            {tab.title}
-          </button>
-        ))}
+        {tabs.map((tab, idx) => {
+          const effectiveColor = validColor(tab.color) ?? parentValidColor;
+          return (
+            <button
+              key={idx}
+              role="tab"
+              aria-selected={idx === safeIndex}
+              className={`gloss-tabs-btn${effectiveColor ? ` gloss-color-${effectiveColor}` : ""}${idx === safeIndex ? " active" : ""}`}
+              onClick={() => setActiveIndex(idx)}
+            >
+              {tab.title}
+            </button>
+          );
+        })}
       </div>
       <div className="gloss-tabs-panel" role="tabpanel">
         {tabs[safeIndex]?.content}
@@ -238,11 +241,13 @@ export function GlossDirective({ name, attrs, children, inline = false }: GlossD
       );
     }
     case "tabs":
-      return <GlossTabs color={safeColor(attrs.color, "blue")}>{children}</GlossTabs>;
+      return <GlossTabs color={validColor(attrs.color)}>{children}</GlossTabs>;
     case "tab":
       return <GlossTab title={attrs.title} color={attrs.color}>{children}</GlossTab>;
-    case "badge":
-      return <span className={`gloss-badge gloss-color-${safeColor(attrs.color)}`}>{children}</span>;
+    case "badge": {
+      const badgeColor = validColor(attrs.color);
+      return <span className={`gloss-badge${badgeColor ? ` gloss-color-${badgeColor}` : ""}`}>{children}</span>;
+    }
     case "small":
       return <small className="gloss-small">{children}</small>;
     case "big":
@@ -262,11 +267,11 @@ export function GlossDirective({ name, attrs, children, inline = false }: GlossD
         : <code>{expr}</code>;
     }
     case "heading": {
-      const color = safeColor(attrs.color);
+      const headingColor = validColor(attrs.color);
       const rawIndent = parseInt(attrs.indent ?? "0", 10);
       const indent = Number.isFinite(rawIndent) && rawIndent > 0 ? rawIndent : 0;
       const level = clampLevel(attrs.level);
-      const className = `gloss-heading gloss-heading-color-${color}`;
+      const className = `gloss-heading${headingColor ? ` gloss-heading-color-${headingColor}` : ""}`;
       const id = slugify(childrenToText(children));
       const H = `h${level}` as "h1" | "h2" | "h3" | "h4" | "h5" | "h6";
       const style = indent > 0 ? { marginLeft: `${indent * 1.5}rem` } : undefined;
@@ -326,7 +331,8 @@ export function GlossDirective({ name, attrs, children, inline = false }: GlossD
       );
     }
     case "cell": {
-      const colorClass = attrs.color ? ` gloss-color-${safeColor(attrs.color, "gray")}` : "";
+      const cellColor = validColor(attrs.color);
+      const colorClass = cellColor ? ` gloss-color-${cellColor}` : "";
       const borderClass =
         attrs.border === "none" ? " gloss-border-none" : attrs.border === "solid" ? " gloss-border-solid" : "";
       return (
@@ -336,10 +342,13 @@ export function GlossDirective({ name, attrs, children, inline = false }: GlossD
         </div>
       );
     }
-    case "steps":
-      return <ol className={`gloss-steps gloss-color-${safeColor(attrs.color, "blue")}`}>{children}</ol>;
+    case "steps": {
+      const stepsColor = validColor(attrs.color);
+      return <ol className={`gloss-steps${stepsColor ? ` gloss-color-${stepsColor}` : ""}`}>{children}</ol>;
+    }
     case "step": {
-      const colorClass = attrs.color ? ` gloss-color-${safeColor(attrs.color, "blue")}` : "";
+      const stepColor = validColor(attrs.color);
+      const colorClass = stepColor ? ` gloss-color-${stepColor}` : "";
       return (
         <li className={`gloss-step${colorClass}`}>
           {attrs.title && <strong>{attrs.title}</strong>}

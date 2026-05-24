@@ -4,6 +4,11 @@ export const ALLOWED_COLORS = ["gray", "blue", "green", "yellow", "red", "purple
 
 export const SAFE_URL_PATTERN = /^(https?:\/\/|\.\.?\/|\/[^/]|#)/;
 
+/** Returns the color string if it is one of the allowed values, otherwise undefined. */
+export function validColor(color: string | undefined): string | undefined {
+  return color && (ALLOWED_COLORS as readonly string[]).includes(color) ? color : undefined;
+}
+
 /**
  * Parse a `key=value key2="value with spaces" flag` attribute string.
  * Quoted values support `\"`, `\\`, and `\n` escape sequences.

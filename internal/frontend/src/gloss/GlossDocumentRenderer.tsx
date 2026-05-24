@@ -203,10 +203,10 @@ function GlossNodeRenderer({ node, parentInline = false }: { node: GlossNode; pa
   if (node.name === "tabs") {
     const tabs = node.children
       .filter((c): c is GlossNode => c.kind === "cue" && c.name === "tab")
-      .map((tab) => ({
-        title: tab.attrs.title ?? "",
+      .map((tab, i) => ({
+        title: tab.attrs.title ?? `Tab ${i + 1}`,
         color: tab.attrs.color,
-        content: tab.children.map((c, i) => renderChild(c, i)),
+        content: tab.children.map((c, j) => renderChild(c, j)),
       }));
     return <GlossTabsRenderer tabs={tabs} color={node.attrs.color} />;
   }
@@ -231,14 +231,45 @@ function GlossNodeRenderer({ node, parentInline = false }: { node: GlossNode; pa
   }
 
   if (node.name === "grid") {
+    const gridColor = node.attrs.color;
     const cellCount = node.children.filter(
       (c) => c.kind === "cue" && c.name === "cell",
     ).length;
-    const children = node.children.map((c, i) => renderChild(c, i, isInline));
+    const children = node.children.map((c, i) => {
+      if (c.kind === "cue" && c.name === "cell" && gridColor && !c.attrs.color) {
+        const enriched: GlossNode = { ...c, attrs: { ...c.attrs, color: gridColor } };
+        return renderChild(enriched, i, isInline);
+      }
+      return renderChild(c, i, isInline);
+    });
     return (
       <GlossDirective
         name="grid"
         attrs={{ ...node.attrs, _cell_count: String(cellCount || 0) }}
+        inline={isInline}
+        selfClosing={node.selfClosing}
+      >
+        {children}
+      </GlossDirective>
+    );
+  }
+
+  if (node.name === "steps") {
+    let stepIdx = 0;
+    const children = node.children.map((c, i) => {
+      if (c.kind === "cue" && c.name === "step") {
+        const idx = stepIdx++;
+        const enriched: GlossNode = c.attrs.title
+          ? c
+          : { ...c, attrs: { ...c.attrs, title: `Step ${idx + 1}` } };
+        return renderChild(enriched, i, isInline);
+      }
+      return renderChild(c, i, isInline);
+    });
+    return (
+      <GlossDirective
+        name="steps"
+        attrs={node.attrs}
         inline={isInline}
         selfClosing={node.selfClosing}
       >
